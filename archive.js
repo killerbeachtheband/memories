@@ -242,6 +242,13 @@ function detailSources(e){
 }
 
 function workKey(e){return `${e.category}|${String(e.title||'').trim().replace(/^(?:\(\S{1,8}\)|（[^）]{1,8}）)\s*/,'').toLowerCase()}`}
+const MEMBER_COLORS={Naoki:'#FF4D00',Toshi:'#2563EB',Ryota:'#0E9F6E',Ryusei:'#7C3AED'};
+const memberColor=m=>MEMBER_COLORS[m]||'#6B7280';
+function ratingBarMarkup(r){
+ if(typeof r.rating!=='number')return '';
+ const pct=Math.max(0,Math.min(100,r.rating*10));
+ return `<span class="rating-bar" role="img" aria-label="Rating ${escapeHTML(ratingText(r))}"><span class="rating-fill" style="width:${pct}%;background:${memberColor(r.member)}"></span></span>`;
+}
 function sameWorkReviews(e){
  const group=entries.filter(item=>workKey(item)===workKey(e));
  if(group.length<2)return null;
@@ -250,7 +257,7 @@ function sameWorkReviews(e){
 }
 function memberReviewMarkup(r){
  const {body}=detailSources(r);
- return `<article class="member-review"><header class="member-review-head"><span class="member-review-name">${escapeHTML(r.member||'Unknown member')}</span><span class="member-review-rating">${escapeHTML(ratingText(r))}${isLegacy(r)?'<span class="legacy-badge">Legacy</span>':''}</span></header><p class="detail-note${r.note?'':' note-empty'}"${jaLang(r.note)}>${r.note?escapeHTML(r.note):'No note has been recorded yet.'}</p>${body?`<div class="member-review-body"${jaLang(body)}>${renderMarkdown(body)}</div>`:''}</article>`;
+ return `<article class="member-review"><header class="member-review-head"><span class="member-review-name"><span class="member-dot" style="background:${memberColor(r.member)}"></span>${escapeHTML(r.member||'Unknown member')}</span><span class="member-review-rating" style="color:${memberColor(r.member)}">${escapeHTML(ratingText(r))}${isLegacy(r)?'<span class="legacy-badge">Legacy</span>':''}</span></header>${typeof r.rating==='number'?`<div class="rating-row">${ratingBarMarkup(r)}</div>`:''}<p class="detail-note${r.note?'':' note-empty'}"${jaLang(r.note)}>${r.note?escapeHTML(r.note):'No note has been recorded yet.'}</p>${body?`<div class="member-review-body"${jaLang(body)}>${renderMarkdown(body)}</div>`:''}</article>`;
 }
 function showEntry(id,button=null){
  if(detailDialog.open)return;
@@ -263,7 +270,7 @@ function showEntry(id,button=null){
  const checkedOn=reviewFacts.filter(([k])=>k==='SCORES CHECKED ON').map(([,v])=>v);
  facts.push(...reviewFacts.filter(([k])=>k!=='SCORES CHECKED ON'));
  const scoreContext=checkedOn.length?`<span class="score-context">Checked ${checkedOn.map(v=>escapeHTML(formatDate(v))).join(', ')}. Scores may change.</span>`:'';
- document.querySelector('#detail-content').innerHTML=`<div class="detail-layout"><div class="detail-visual">${coverMarkup(e,true)}</div><div class="detail-body"><h2 id="detail-title" class="${isJapanese(e.title)?'jp':''}"${jaLang(e.title)}>${escapeHTML(e.title)}</h2>${e.originalTitle?.trim() && e.originalTitle.trim()!==e.title?`<p class="original-title"${jaLang(e.originalTitle)}>${escapeHTML(e.originalTitle)}</p>`:''}<p class="detail-creator"${jaLang(e.creator)}>${escapeHTML(e.creator||'Creator unrecorded')}</p><div class="detail-tags">${e.tags.map(t=>`<span>${escapeHTML(t)}</span>`).join('')}</div>${reviews?'':`<p class="detail-note${e.note?'':' note-empty'}"${jaLang(e.note)}>${e.note?escapeHTML(e.note):'No note has been recorded yet.'}</p>`}<dl class="detail-facts">${facts.map(([k,v])=>`<div><dt>${escapeHTML(k)}</dt><dd>${escapeHTML(v)}${k==='PERSONAL RATING'&&isLegacy(e)?'<span class="legacy-badge">Legacy</span>':''}</dd></div>`).join('')}</dl><div class="source-links">${links.map(([k,u])=>`<a href="${escapeHTML(safeURL(u))}" target="_blank" rel="noopener noreferrer">${k==='リンク'?'Listen online':escapeHTML(k)} ↗</a>`).join('')}</div></div></div>${reviews?`<section class="member-reviews"><h3 class="member-reviews-heading">MEMBER REVIEWS</h3>${reviews.map(memberReviewMarkup).join('')}</section>`:`<section class="entry-body"${jaLang(body)}>${body?renderMarkdown(body):'<p class="note-empty">This record has no written entry yet.</p>'}</section>`}<p class="detail-disclaimer"><a href="${escapeHTML(safeURL(e.url))}" target="_blank" rel="noopener noreferrer">Open the log sheet</a>${scoreContext}</p>`;
+ document.querySelector('#detail-content').innerHTML=`<div class="detail-layout"><div class="detail-visual">${coverMarkup(e,true)}</div><div class="detail-body"><h2 id="detail-title" class="${isJapanese(e.title)?'jp':''}"${jaLang(e.title)}>${escapeHTML(e.title)}</h2>${e.originalTitle?.trim() && e.originalTitle.trim()!==e.title?`<p class="original-title"${jaLang(e.originalTitle)}>${escapeHTML(e.originalTitle)}</p>`:''}<p class="detail-creator"${jaLang(e.creator)}>${escapeHTML(e.creator||'Creator unrecorded')}</p><div class="detail-tags">${e.tags.map(t=>`<span>${escapeHTML(t)}</span>`).join('')}</div>${reviews?'':`<p class="detail-note${e.note?'':' note-empty'}"${jaLang(e.note)}>${e.note?escapeHTML(e.note):'No note has been recorded yet.'}</p>`}<dl class="detail-facts">${facts.map(([k,v])=>`<div><dt>${escapeHTML(k)}</dt><dd>${escapeHTML(v)}${k==='PERSONAL RATING'&&isLegacy(e)?'<span class="legacy-badge">Legacy</span>':''}${k==='PERSONAL RATING'?ratingBarMarkup(e):''}</dd></div>`).join('')}</dl><div class="source-links">${links.map(([k,u])=>`<a href="${escapeHTML(safeURL(u))}" target="_blank" rel="noopener noreferrer">${k==='リンク'?'Listen online':escapeHTML(k)} ↗</a>`).join('')}</div></div></div>${reviews?`<section class="member-reviews"><h3 class="member-reviews-heading">MEMBER REVIEWS</h3>${reviews.map(memberReviewMarkup).join('')}</section>`:`<section class="entry-body"${jaLang(body)}>${body?renderMarkdown(body):'<p class="note-empty">This record has no written entry yet.</p>'}</section>`}<p class="detail-disclaimer"><a href="${escapeHTML(safeURL(e.url))}" target="_blank" rel="noopener noreferrer">Open the log sheet</a>${scoreContext}</p>`;
  const reveal=()=>openArchiveDialog(detailDialog,button);
  if(floatingEdition&&typeof detailArtworkTransition!=='undefined')detailArtworkTransition.open(detailDialog,button,reveal);
  else reveal();
