@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en" data-edition="floating">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+ <meta name="color-scheme" content="light"><meta name="robots" content="noindex,nofollow">
+ <meta name="description" content="Killer Beach members’ collection. Films, music, art, live performances and notes.">
+ <title>Memories — Killer Beach</title>
+ <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23FF4D00'/%3E%3C/svg%3E">
+ <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="reference-tokens.css"><link rel="stylesheet" href="floating.css">
+ <script src="data.js" defer></script><script src="detail-transition.js" defer></script><script src="archive.js" defer></script><script src="paper.js" defer></script><script src="section-scroll.js" defer></script><script src="collection-snap.js" defer></script><script src="floating.js" defer></script>
+</head>
+<body>
+ <a href="#collection" class="skip">Skip to collection</a>
+ <h1 class="sr-only">Memories — Killer Beach</h1>
+ <nav class="central-nav" aria-label="Main navigation"><span class="wordmark"><span class="wordmark-window"><span class="wordmark-rotor"><a href="#top" class="wordmark-face" aria-label="Memories - back to top">Memories</a><a href="https://www.instagram.com/killerbeach_theband/" class="wordmark-face wordmark-face-alt" target="_blank" rel="noopener noreferrer" aria-label="Killer Beach - Instagram @killerbeach_theband (opens in a new tab)">by Killer Beach</a></span></span></span><span class="status-pip" aria-hidden="true"></span><button class="menu-trigger" id="menu-open" aria-haspopup="dialog" aria-controls="menu-dialog" aria-expanded="false">Menu <span aria-hidden="true">+</span></button><div class="collection-layout" role="group" aria-label="Collection layout" hidden><button id="view-objects" aria-label="Objects view" title="Objects" aria-controls="collection-grid" aria-pressed="true"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="5" height="5" rx=".6"/><rect x="12" y="3" width="5" height="5" rx=".6"/><rect x="3" y="12" width="5" height="5" rx=".6"/><rect x="12" y="12" width="5" height="5" rx=".6"/></svg></button><button id="view-index" aria-label="Index view" title="Index" aria-controls="collection-grid" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg></button></div></nav>
+ <main id="top">
+  <section class="object-stage" aria-label="Selected works">
+   <div id="stage-objects"></div>
+   <div class="stage-foot"><a class="neutral-link" href="#collection">Collection ↓</a></div>
+  </section>
+  <section class="collection" id="collection" aria-labelledby="collection-title">
+   <div class="collection-heading"><h2 id="collection-title">Collection</h2><p id="result-count" role="status" aria-live="polite">39 objects</p></div>
+   <div class="collection-viewport" id="collection-viewport" role="region" aria-label="Collection artworks" tabindex="0">
+   <div id="collection-grid" class="collection-grid"></div>
+   <div class="load-more-wrap"><span id="shown-count"></span><button id="load-more" class="pill" aria-controls="collection-grid">Load more ↓</button></div>
+   <p id="load-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+   <div id="empty-state" class="empty-state" hidden><h3>No results</h3><button class="pill" id="reset-search">Clear filters</button></div>
+   </div>
+  </section>
+ </main>
+ <dialog id="menu-dialog" class="menu-dialog" aria-labelledby="menu-title">
+  <div class="panel-heading"><h2 id="menu-title">Menu</h2><button class="dialog-close" aria-label="Close menu">Close ×</button></div>
+  <label class="search"><span>Search</span><input id="search" type="search" placeholder="Title, artist, or note" aria-label="Search titles, creators, and notes" enterkeyhint="search"></label>
+  <div id="collection-scope" class="scope-options" role="group" aria-label="Collection scope" aria-describedby="scope-help"><button class="filter active" data-scope="collection" aria-pressed="true">Collection <sup></sup></button><button class="filter" data-scope="legacy" aria-pressed="false">Legacy <sup></sup></button><button class="filter" data-scope="both" aria-pressed="false">Both <sup></sup></button></div>
+  <p id="scope-help" class="filter-help" aria-live="polite" aria-atomic="true"></p>
+  <div id="member-filters" class="filters member-filters" role="group" aria-label="Filter by member"></div>
+  <div class="filters" role="group" aria-label="Filter by medium"></div>
+  <details id="rating-filters" class="rating-filters">
+   <summary>Rating · <span id="rating-summary">Rated</span></summary>
+   <div class="rating-options" role="group" aria-label="Special ratings"><button class="rating-filter" data-rating="goat" aria-pressed="false" aria-describedby="goat-help">GOAT</button><button class="rating-filter" data-rating="unrated" aria-pressed="false">Unrated</button></div>
+   <p id="goat-help" class="filter-help"></p>
+   <div class="rating-group" data-rating-group="score"><h4>Score · / 10</h4><div class="rating-options" role="group" aria-label="Scores out of ten"></div></div>
+   <button id="rating-clear" class="neutral-link" hidden>Clear rating</button>
+  </details>
+  <div class="menu-result-row"><p id="menu-result" role="status" aria-live="polite">39 objects</p><button id="menu-reset" class="neutral-link" hidden>Clear filters</button></div>
+  <button class="view-results" id="view-results">View collection <span aria-hidden="true">↗</span></button>
+ </dialog>
+ <button id="design-options-open" class="neutral-link" hidden>Design options</button>
+ <dialog id="nav-design-dialog" class="nav-design-dialog" aria-labelledby="nav-design-title">
+  <div class="panel-heading"><h2 id="nav-design-title">Navigation / 3 options</h2><button class="dialog-close" aria-label="Close design options">Close ×</button></div>
+  <div class="nav-design-options">
+   <button class="design-choice" data-design="graphite" aria-label="Preview A: Graphite"><span class="design-label">A / Graphite</span><span class="nav-sample sample-graphite"><span>Memories</span><span>Menu +</span></span></button>
+   <button class="design-choice" data-design="split" aria-label="Preview B: Split"><span class="design-label">B / Split</span><span class="nav-sample sample-split"><span>Memories</span><span>+</span></span></button>
+   <button class="design-choice" data-design="outline" aria-label="Preview C: Outline"><span class="design-label">C / Outline</span><span class="nav-sample sample-outline"><span>Memories</span><span>Menu ↗</span></span></button>
+  </div>
+ </dialog>
+ <dialog id="detail-dialog" class="detail-dialog" aria-labelledby="detail-title"><button class="dialog-close" aria-label="Close detail">Close ×</button><div id="detail-content"></div></dialog>
+</body>
+</html>
