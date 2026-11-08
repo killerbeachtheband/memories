@@ -12,6 +12,9 @@
   }).join('');
  }
  drawStage();
+ // The layout is fixed: pinch zoom stays off (iOS Safari ignores the viewport lock).
+ document.addEventListener?.('gesturestart',event=>event.preventDefault());
+ document.addEventListener?.('gesturechange',event=>event.preventDefault());
  const menu=document.querySelector('#menu-dialog');
  const trigger=document.querySelector('#menu-open');
  trigger.addEventListener('click',()=>openArchiveDialog(menu));
