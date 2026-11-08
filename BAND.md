@@ -8,7 +8,7 @@
   https://docs.google.com/spreadsheets/d/16N2fcTJAG94xfBznAptM3xrO0alUxDWsOGZnt_-vp3c/edit
 - `entries` タブに1行 = 1記録。列:
   member / category / title / originalTitle / creator / rating（0–10）/ tags（カンマ区切り）/
-  experiencedDate / releaseDate / hallOfFame（TRUE で殿堂入り）/ legacy（TRUE で過去作枠）/ note（一言）/ body（長文・任意）
+  experiencedDate / releaseDate / hallOfFame（TRUE で殿堂入り）/ legacy（TRUE で Formative＝最も影響を受けた作品）/ note（一言）/ body（長文・任意）
 - member: Yamashita / 鈴木智仁 / のむらりょうた / 江井龍世
 - category: 映画 / 音楽 / アート / 舞台・ライブ / ゲーム / 建築 / 本
 - シート内の「使い方」タブにも同じ説明あり。
