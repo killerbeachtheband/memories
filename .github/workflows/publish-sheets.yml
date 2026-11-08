@@ -1,0 +1,66 @@
+name: Update Sheet and publish
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  repository_dispatch:
+    types: [sheet_changed]
+  schedule:
+    # Hourly reconciliation; GitHub may delay scheduled starts.
+    - cron: '23 * * * *'
+
+concurrency:
+  group: memories-pages
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+      - name: Check website behavior
+        run: node --test tests/*.test.cjs tests/*.test.mjs
+      - name: Read current Sheet records
+        if: github.event_name != 'push'
+        env:
+          SHEET_ID: ${{ vars.SHEET_ID }}
+        run: python3 scripts/sync_sheets.py --sheet-id "$SHEET_ID"
+      - name: Save changed snapshot
+        id: snapshot
+        shell: bash
+        run: |
+          git add -- data.js
+          if git diff --cached --quiet -- data.js; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'Update Sheet snapshot'
+            git push origin HEAD:main
+          fi
+      - name: Package site
+        if: github.event_name == 'push' || steps.snapshot.outputs.changed == 'true'
+        run: python3 scripts/package_site.py
+      - uses: actions/configure-pages@v5
+        if: github.event_name == 'push' || steps.snapshot.outputs.changed == 'true'
+      - uses: actions/upload-pages-artifact@v4
+        if: github.event_name == 'push' || steps.snapshot.outputs.changed == 'true'
+        with:
+          path: _site
+      - name: Publish
+        id: deployment
+        if: github.event_name == 'push' || steps.snapshot.outputs.changed == 'true'
+        uses: actions/deploy-pages@v4
