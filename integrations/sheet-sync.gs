@@ -20,7 +20,7 @@ const SOURCES = { '映画': 'movies', '音楽': 'music', 'アート': 'art', '�
 const LABELS = { '映画': 'CINEMA', '本': 'LITERATURE', '音楽': 'MUSIC', 'アート': 'ART',
                  '舞台・ライブ': 'LIVE', 'ゲーム': 'GAMES', '建築': 'ARCHITECTURE', 'その他': 'OTHER' };
 const COLUMNS = ['member', 'category', 'title', 'originalTitle', 'creator', 'rating', 'tags',
-                 'experiencedDate', 'releaseDate', 'hallOfFame', 'legacy', 'note', 'body', 'cover'];
+                 'experiencedDate', 'releaseDate', 'hallOfFame', 'formative', 'note', 'body', 'cover'];
 
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('MEMORIES')
@@ -79,7 +79,7 @@ function buildEntries() {
       originalTitle: String(row.originalTitle || '').trim(), creator: String(row.creator || '').trim(),
       category: category, label: LABELS[category], rating: rating,
       ratingLabel: rating !== null ? rating + ' / 10' : '未評価', ratingScale: 10,
-      hallOfFame: truthy(row.hallOfFame), legacy: truthy(row.legacy),
+      hallOfFame: truthy(row.hallOfFame), formative: truthy(row.formative),
       sortDate: experienced || released,
       sortDateProperty: experienced ? '体験日' : 'リリース日',
       dateLabel: experienced ? 'EXPERIENCED ON' : 'RELEASED ON', sourceDatabase: null,
