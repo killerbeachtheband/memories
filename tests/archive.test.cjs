@@ -5,17 +5,17 @@ const vm=require('node:vm');
 const path=require('node:path');
 const source=fs.readFileSync(process.env.ARCHIVE_SOURCE||path.join(__dirname,'../archive.js'),'utf8');
 const context=vm.createContext({collectionScope:'collection',activeFilters:new Set(),activeRatings:new Set()});
-vm.runInContext(source.slice(source.indexOf('function isLegacy'),source.indexOf('function updateRatingButtons')),context);
+vm.runInContext(source.slice(source.indexOf('function isFormative'),source.indexOf('function updateRatingButtons')),context);
 const select=(...values)=>new Set(values);
-test('Legacy follows the checkbox regardless of dates',()=>{
- assert.equal(context.isLegacy({legacy:false,sortDate:'1990-01-01'}),false);
- assert.equal(context.isLegacy({legacy:true,sortDate:'2026-01-01'}),true);
- assert.equal(context.isLegacy({sortDate:'1990-01-01'}),false);
+test('Formative follows the checkbox regardless of dates',()=>{
+ assert.equal(context.isFormative({formative:false,sortDate:'1990-01-01'}),false);
+ assert.equal(context.isFormative({formative:true,sortDate:'2026-01-01'}),true);
+ assert.equal(context.isFormative({sortDate:'1990-01-01'}),false);
 });
-test('media filters combine independently from Collection, Legacy and Both scope',()=>{
- const film={category:'Cinema',legacy:false},music={category:'Music',legacy:true},selected=select('Cinema','Music');
+test('media filters combine independently from Collection, Formative and Both scope',()=>{
+ const film={category:'Cinema',formative:false},music={category:'Music',formative:true},selected=select('Cinema','Music');
  context.collectionScope='collection';assert(context.matchesCollectionFilter(film,selected));assert(!context.matchesCollectionFilter(music,selected));
- context.collectionScope='legacy';assert(!context.matchesCollectionFilter(film,selected));assert(context.matchesCollectionFilter(music,selected));
+ context.collectionScope='formative';assert(!context.matchesCollectionFilter(film,selected));assert(context.matchesCollectionFilter(music,selected));
  context.collectionScope='both';assert(context.matchesCollectionFilter(film,selected));assert(context.matchesCollectionFilter(music,selected));
  assert(!context.matchesCollectionFilter(music,select('Cinema')));assert(context.matchesCollectionFilter(music,select()));
  context.collectionScope='collection';
@@ -23,18 +23,18 @@ test('media filters combine independently from Collection, Legacy and Both scope
 
 test('scope counts follow active media and ratings and update the selected scope help',()=>{
  const button=scope=>({dataset:{scope},classList:{toggle(){}},setAttribute(key,value){this[key]=value;},count:{textContent:''},querySelector(){return this.count;}});
- const buttons=['collection','legacy','both'].map(button),help={textContent:''};
+ const buttons=['collection','formative','both'].map(button),help={textContent:''};
  const local=vm.createContext({collectionScope:'collection',activeFilters:select(),activeRatings:select(),entries:[
-  {category:'Cinema',rating:9},{category:'Cinema',legacy:true,rating:9,hallOfFame:true},
-  {category:'Music',rating:8,hallOfFame:true},{category:'Music',legacy:true,rating:null}
+  {category:'Cinema',rating:9},{category:'Cinema',formative:true,rating:9,hallOfFame:true},
+  {category:'Music',rating:8,hallOfFame:true},{category:'Music',formative:true,rating:null}
  ],pad:v=>String(v).padStart(2,'0'),filters:{querySelectorAll:()=>[]},document:{querySelectorAll:()=>buttons,querySelector:()=>help}});
  vm.runInContext(source.match(/const filterHelp=.+;/)[0],local);
- vm.runInContext(source.slice(source.indexOf('function isLegacy'),source.indexOf('function updateRatingButtons')),local);
+ vm.runInContext(source.slice(source.indexOf('function isFormative'),source.indexOf('function updateRatingButtons')),local);
  vm.runInContext(source.slice(source.indexOf('function updateFilterButtons'),source.indexOf('function cardMarkup')),local);
  const counts=()=>buttons.map(b=>b.count.textContent);
  local.updateFilterButtons();assert.deepEqual(counts(),['02','01','03']);assert.equal(help.textContent,'All records except the Formative picks.');
  local.activeFilters=select('Cinema');local.updateFilterButtons();assert.deepEqual(counts(),['01','01','02']);
- local.activeRatings=select('goat');local.collectionScope='legacy';local.updateFilterButtons();
+ local.activeRatings=select('goat');local.collectionScope='formative';local.updateFilterButtons();
  assert.deepEqual(counts(),['00','01','01']);assert.equal(help.textContent,'The records that influenced us most.');
  assert.equal(buttons[1]['aria-pressed'],'true');assert.equal(buttons[0]['aria-pressed'],'false');
  local.activeFilters.clear();local.activeRatings=select('score-8','score-9');local.collectionScope='both';local.updateFilterButtons();
@@ -123,7 +123,7 @@ function archiveDOM(entryData){
  const add=(parent,id,extra={})=>parent.append(new Element({id,...extra}));
  for(const id of ['collection-grid','search','load-status','result-count','empty-state','load-more','shown-count','reset-search','menu-result','view-results','menu-reset'])add(document,id);
  const scope=add(document,'collection-scope');
- for(const value of ['collection','legacy','both']){
+ for(const value of ['collection','formative','both']){
   const button=add(scope,'',{dataset:{scope:value}});button.tagName='BUTTON';
   const sup=add(button,'');sup.tagName='SUP';
  }
@@ -137,10 +137,10 @@ function archiveDOM(entryData){
  const entries=[
   {title:'Needle',category:'映画',rating:9},
   {title:'Current film',category:'映画',rating:8},
-  {title:'Earlier film',category:'映画',rating:9,legacy:true},
+  {title:'Earlier film',category:'映画',rating:9,formative:true},
   {title:'Current music',category:'音楽',rating:8},
-  {title:'Earlier music',category:'音楽',rating:9,legacy:true},
-  {title:'Unrated music',category:'音楽',rating:null,legacy:true}
+  {title:'Earlier music',category:'音楽',rating:9,formative:true},
+  {title:'Unrated music',category:'音楽',rating:null,formative:true}
  ].map((entry,id)=>({...entry,id:String(id),tags:[],label:'TEST'}));
  const local=vm.createContext({document,ARCHIVE:{entries:entryData||entries},window:{},MutationObserver:class{observe(){}}});
  vm.runInContext(source,local);
@@ -169,12 +169,12 @@ test('scope, medium and rating clicks refresh counts and help, and public reset 
  const document=archiveDOM();
  assertScopeDOM(document,['03','02','05'],'All records, including the Formative picks.','both');
  // Click the nested count to also exercise delegated closest('[data-scope]').
- document.querySelector('[data-scope="legacy"]').querySelector('sup').click();
- assertScopeDOM(document,['03','02','05'],'The records that influenced us most.','legacy');
+ document.querySelector('[data-scope="formative"]').querySelector('sup').click();
+ assertScopeDOM(document,['03','02','05'],'The records that influenced us most.','formative');
  document.querySelector('[data-filter="映画"]').click();
- assertScopeDOM(document,['02','01','03'],'The records that influenced us most.','legacy','映画');
+ assertScopeDOM(document,['02','01','03'],'The records that influenced us most.','formative','映画');
  document.querySelector('[data-rating="score-9"]').click();
- assertScopeDOM(document,['01','01','02'],'The records that influenced us most.','legacy','映画','score-9');
+ assertScopeDOM(document,['01','01','02'],'The records that influenced us most.','formative','映画','score-9');
  document.querySelector('#search').value='Earlier';
  document.querySelector('#reset-search').click();
  assert.equal(document.querySelector('#search').value,'');
@@ -199,14 +199,14 @@ test('search input changes results without changing scope or medium facet counts
 
 function archiveSnapshot(){
  const entries=vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../data.js'),'utf8')+';ARCHIVE.entries');
- const rated=entries.find(e=>typeof e.rating==='number'&&e.legacy!==true);
+ const rated=entries.find(e=>typeof e.rating==='number'&&e.formative!==true);
  assert(rated,'snapshot needs a rated Collection entry');
  // Rating or archiving every real work must not make the default-hide checks vacuous.
- if(!entries.some(e=>typeof e.rating!=='number'&&e.legacy!==true)){
+ if(!entries.some(e=>typeof e.rating!=='number'&&e.formative!==true)){
   const snapshotText=JSON.stringify(entries).normalize('NFKC').toLocaleLowerCase('ja');
   let token='snapshot-unrated-fixture';
   while(snapshotText.includes(token))token+='-';
-  entries.push({...rated,id:token,title:token,originalTitle:'',rating:null,legacy:false});
+  entries.push({...rated,id:token,title:token,originalTitle:'',rating:null,formative:false});
  }
  return entries;
 }
@@ -216,11 +216,11 @@ function visibleIds(document){
 
 // Independent expectations use only snapshot fields, never production predicates.
 const countText=count=>String(count).padStart(2,'0');
-const resultText=(count,scope='both',filtered=false)=>`${countText(count)} ${count===1?'OBJECT':'OBJECTS'} / ${scope==='both'?'ALL':scope==='legacy'?'FORMATIVE':'COLLECTION'}${filtered?' / FILTERED':''}`;
+const resultText=(count,scope='both',filtered=false)=>`${countText(count)} ${count===1?'OBJECT':'OBJECTS'} / ${scope==='both'?'ALL':scope==='formative'?'FORMATIVE':'COLLECTION'}${filtered?' / FILTERED':''}`;
 const menuText=count=>count?`${count} ${count===1?'object':'objects'}`:'No matches. Try another search.';
 function snapshotSelection(entries,{unrated=false,scope='both',medium='all'}={}){
  return Array.from(entries).filter(e=>(typeof e.rating!=='number')===unrated)
-  .filter(e=>scope==='both'||(scope==='legacy'?e.legacy===true:e.legacy!==true))
+  .filter(e=>scope==='both'||(scope==='formative'?e.formative===true:e.formative!==true))
   .filter(e=>medium==='all'||e.category===medium);
 }
 function assertSnapshotFacets(document,entries,options={}){
@@ -246,7 +246,7 @@ test('default view hides unrated entries from the list and all facet counts',()=
  assert.equal(document.querySelector('#result-count').textContent,resultText(snapshotSelection(entries).length));
  assert.equal(document.querySelector('#rating-summary').textContent,'Rated');
  assert.match(fs.readFileSync(path.join(__dirname,'../index.html'),'utf8'),/id="rating-summary">Rated</);
- for(const scope of ['collection','legacy','both']){
+ for(const scope of ['collection','formative','both']){
   document.querySelector(`[data-scope="${scope}"]`).click();
   assertSnapshotFacets(document,entries,{scope});
   const expected=snapshotSelection(entries,{scope});
@@ -301,7 +301,7 @@ test('search for an unrated title requires the Unrated filter',()=>{
 
 test('hero stage pool excludes unrated entries while retaining numeric zero and legacy covers',()=>{
  const floating=fs.readFileSync(path.join(__dirname,'../floating.js'),'utf8'),stage={innerHTML:''};
- const entries=[{id:'zero',rating:0,cover:'zero.jpg'},{id:'legacy',rating:9,legacy:true,cover:'legacy.jpg'},
+ const entries=[{id:'zero',rating:0,cover:'zero.jpg'},{id:'legacy',rating:9,formative:true,cover:'legacy.jpg'},
   {id:'null',rating:null,cover:'null.jpg'},{id:'missing',cover:'missing.jpg'},
   {id:'string',rating:'9',cover:'string.jpg'},{id:'blank',rating:8,cover:' '}];
  vm.runInNewContext(floating.slice(0,floating.indexOf(' const menu='))+'})();',{
