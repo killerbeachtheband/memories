@@ -119,29 +119,50 @@ function normalizeTitle(s) {
   return String(s || '').toLowerCase().replace(/[\s　・:：/／\-—–'"“”‘’()（）\[\]【】]/g, '');
 }
 
+function cleanTitle(title) {
+  let t = String(title || '').trim();
+  // Drop leading bracketed annotations such as （記入例） or 【限定盤】.
+  let prev;
+  do { prev = t; t = t.replace(/^\s*[（(【\[][^）)】\]]*[）)】\]]\s*/, ''); } while (t !== prev);
+  return t.trim();
+}
+
 function findArtworkUrl(entry) {
-  const term = encodeURIComponent((entry.title + ' ' + (entry.creator || '')).trim());
+  const title = cleanTitle(entry.title);
+  const terms = [];
+  if (entry.creator) terms.push(title + ' ' + entry.creator);
+  terms.push(title);
+  if (entry.originalTitle && entry.originalTitle !== entry.title) {
+    terms.push(cleanTitle(entry.originalTitle) + ' ' + (entry.creator || ''));
+  }
+  const wantTitle = normalizeTitle(title);
+  const wantCreator = normalizeTitle(entry.creator || '');
   try {
     if (entry.source === 'music' || entry.source === 'movies') {
       const media = entry.source === 'music' ? 'music' : 'movie';
       const entity = entry.source === 'music' ? 'album' : 'movie';
-      for (const country of ['JP', 'US']) {
-        const url = 'https://itunes.apple.com/search?term=' + term + '&media=' + media +
-                    '&entity=' + entity + '&limit=5&country=' + country;
-        const data = JSON.parse(UrlFetchApp.fetch(url, { muteHttpExceptions: true }).getContentText());
-        for (const r of (data.results || [])) {
-          const name = r.collectionName || r.trackName || '';
-          if (r.artworkUrl100 && normalizeTitle(name).includes(normalizeTitle(entry.title).slice(0, 8))) {
-            return r.artworkUrl100.replace('100x100bb.jpg', '1200x1200bb.jpg');
+      let firstArtwork = null;
+      for (const term of terms) {
+        for (const country of ['JP', 'US']) {
+          const url = 'https://itunes.apple.com/search?term=' + encodeURIComponent(term) +
+                      '&media=' + media + '&entity=' + entity + '&limit=5&country=' + country;
+          const data = JSON.parse(UrlFetchApp.fetch(url, { muteHttpExceptions: true }).getContentText());
+          for (const r of (data.results || [])) {
+            if (!r.artworkUrl100) continue;
+            const art = r.artworkUrl100.replace('100x100bb.jpg', '1200x1200bb.jpg');
+            if (!firstArtwork) firstArtwork = art;
+            const name = normalizeTitle(r.collectionName || r.trackName || '');
+            const artist = normalizeTitle(r.artistName || '');
+            if (name && (name.includes(wantTitle) || wantTitle.includes(name))) return art;
+            if (wantCreator && artist && (artist.includes(wantCreator) || wantCreator.includes(artist))) return art;
           }
         }
-        if ((data.results || []).length && data.results[0].artworkUrl100) {
-          return data.results[0].artworkUrl100.replace('100x100bb.jpg', '1200x1200bb.jpg');
-        }
       }
+      if (firstArtwork) Logger.log('Cover (best match): ' + entry.title + ' -> ' + firstArtwork);
+      return firstArtwork;
     }
     if (entry.source === 'books') {
-      const q = encodeURIComponent('intitle:' + entry.title);
+      const q = encodeURIComponent('intitle:' + title);
       const url = 'https://www.googleapis.com/books/v1/volumes?q=' + q + '&maxResults=3';
       const data = JSON.parse(UrlFetchApp.fetch(url, { muteHttpExceptions: true }).getContentText());
       for (const item of (data.items || [])) {
@@ -149,7 +170,8 @@ function findArtworkUrl(entry) {
         if (links.thumbnail) return links.thumbnail.replace('http://', 'https://');
       }
     }
-  } catch (e) { /* artwork lookup is best-effort */ }
+  } catch (e) { Logger.log('Artwork lookup failed for ' + entry.title + ': ' + e); }
+  Logger.log('No cover found for: ' + entry.title);
   return null;
 }
 
