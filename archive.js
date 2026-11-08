@@ -1,6 +1,19 @@
 'use strict';
 const collectionDate=e=>Object.prototype.hasOwnProperty.call(e,'sortDate')?(e.sortDate||''):(e.experiencedDate||e.releaseDate||'');
-const entries=ARCHIVE.entries.map(e=>({...e,pageTitle:e.title,title:e.category==='映画'?(e.originalTitle?.trim()||e.title):e.title})).sort((a,b)=>collectionDate(b).slice(0,10).localeCompare(collectionDate(a).slice(0,10))),grid=document.querySelector('#collection-grid'),search=document.querySelector('#search'),filters=document.querySelector('.filters'),detailDialog=document.querySelector('#detail-dialog'),aboutDialog=document.querySelector('#about-dialog');
+const registeredEntries=ARCHIVE.entries.map(e=>({...e,pageTitle:e.title,title:e.category==='映画'?(e.originalTitle?.trim()||e.title):e.title}));
+const entries=[...registeredEntries].sort((a,b)=>collectionDate(b).slice(0,10).localeCompare(collectionDate(a).slice(0,10))),grid=document.querySelector('#collection-grid'),search=document.querySelector('#search'),filters=document.querySelector('.filters'),detailDialog=document.querySelector('#detail-dialog'),aboutDialog=document.querySelector('#about-dialog');
+// The grid opens in a fresh shuffle on every visit; Newest lists the latest registrations first.
+const shuffled=list=>{const a=[...list];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+let sortMode='shuffle';
+let displayEntries=shuffled(registeredEntries);
+function updateSortButtons(){
+ document.querySelectorAll('[data-sort]').forEach(b=>{const s=b.dataset.sort===sortMode;b.classList.toggle('active',s);b.setAttribute('aria-pressed',String(s));});
+}
+function applySort(mode){
+ sortMode=mode;
+ displayEntries=mode==='newest'?[...registeredEntries].reverse():shuffled(registeredEntries);
+ displayLimit=12;updateSortButtons();render();
+}
 const activeFilters=new Set();
 let activeMember='all';
 const activeRatings=new Set();
@@ -143,11 +156,16 @@ function initFilters(){
   const button=event.target.closest('[data-scope]');if(!button)return;
   collectionScope=button.dataset.scope;displayLimit=12;updateFilterButtons();render();
  });
+ document.querySelector('#sort-order')?.addEventListener('click',event=>{
+  const button=event.target.closest('[data-sort]');if(!button)return;
+  applySort(button.dataset.sort);
+ });
+ updateSortButtons();
  updateFilterButtons();
 }
 function resetCollectionFilters(){
  search.value='';activeFilters.clear();activeRatings.clear();collectionScope='both';activeMember='all';updateMemberButtons();
- displayLimit=12;updateFilterButtons();updateRatingButtons();render();
+ displayLimit=12;sortMode='shuffle';displayEntries=shuffled(registeredEntries);updateSortButtons();updateFilterButtons();updateRatingButtons();render();
 }
 function updateFilterButtons(){
  document.querySelectorAll('[data-scope]').forEach(button=>{
@@ -171,7 +189,7 @@ function cardMarkup(e){
 function render(append=false,focusAdded=false){
  if(!append)document.querySelector('#load-status').textContent='';
  const q=search.value.trim().normalize('NFKC').toLocaleLowerCase('ja');
- let visible=entries.filter(e=>matchesCollectionFilter(e)&&matchesRating(e)&&(activeMember==='all'||e.member===activeMember)&&[e.title,e.pageTitle,e.originalTitle,e.creator,e.category,e.label,e.note,e.member,...e.tags].join(' ').normalize('NFKC').toLocaleLowerCase('ja').includes(q));
+ let visible=displayEntries.filter(e=>matchesCollectionFilter(e)&&matchesRating(e)&&(activeMember==='all'||e.member===activeMember)&&[e.title,e.pageTitle,e.originalTitle,e.creator,e.category,e.label,e.note,e.member,...e.tags].join(' ').normalize('NFKC').toLocaleLowerCase('ja').includes(q));
  const shown=visible.slice(0,displayLimit);
  const previousCount=append?grid.children.length:0;
  // Keep existing DOM, image state, reveal state and scroll position when extending.
