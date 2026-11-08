@@ -368,11 +368,14 @@ html.section-sliding,html.collection-settling{scroll-behavior:auto!important}
 .member-review:last-child{border-bottom:0;padding-bottom:4px}
 .member-review-head{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:10px}
 .member-review-name{font-size:14px;font-weight:600}
-.member-review-rating{font-size:14px;color:var(--lime)}
+.member-review-rating{font-size:14px}
 .member-review-body p{font-size:14px;line-height:1.85;margin:12px 0;overflow-wrap:anywhere}
 
 .member-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px}
-.rating-row{margin:0 0 12px}
-.rating-bar{display:block;height:6px;border-radius:9999px;background:var(--plate);overflow:hidden}
-.rating-fill{display:block;height:100%;border-radius:9999px}
-.detail-facts .rating-bar{margin-top:8px;max-width:180px}
+.rating-row{margin:2px 0 14px}
+.rating-wrap{display:flex;align-items:center;gap:10px}
+.rating-num{font-size:10px;letter-spacing:.05em;color:var(--muted);line-height:1;white-space:nowrap}
+.rating-line{display:flex;justify-content:space-between;align-items:center;flex:0 1 150px;width:100%}
+.rating-line i{width:4px;height:4px;border-radius:50%;background:#E0DACD;display:block}
+.rating-line i.on{background:var(--mc,#1A1713)}
+.detail-facts .rating-line{margin-top:10px}
