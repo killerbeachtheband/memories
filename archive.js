@@ -4,10 +4,10 @@ const entries=ARCHIVE.entries.map(e=>({...e,pageTitle:e.title,title:e.category==
 const activeFilters=new Set();
 let activeMember='all';
 const activeRatings=new Set();
-let collectionScope='collection';
-const filterHelp={collection:'Current records.',legacy:'Earlier records kept in a separate archive.',both:'All current and legacy records.',goat:'GOAT marks all-time favourites.'};
+let collectionScope='both';
+const filterHelp={collection:'All records except the Formative picks.',legacy:'The records that influenced us most.',both:'All records, including the Formative picks.',goat:'GOAT marks all-time favourites.'};
 let displayLimit=12;
-// Legacy is an explicit Notion checkbox, independent of all dates.
+// Formative (data flag: legacy) is an explicit checkbox in the log sheet, independent of all dates.
 function isLegacy(e){
  return e.legacy===true;
 }
@@ -146,7 +146,7 @@ function initFilters(){
  updateFilterButtons();
 }
 function resetCollectionFilters(){
- search.value='';activeFilters.clear();activeRatings.clear();collectionScope='collection';activeMember='all';updateMemberButtons();
+ search.value='';activeFilters.clear();activeRatings.clear();collectionScope='both';activeMember='all';updateMemberButtons();
  displayLimit=12;updateFilterButtons();updateRatingButtons();render();
 }
 function updateFilterButtons(){
@@ -178,7 +178,7 @@ function render(append=false,focusAdded=false){
  if(append)grid.insertAdjacentHTML('beforeend',shown.slice(previousCount).map(cardMarkup).join(''));
  else grid.innerHTML=shown.map(cardMarkup).join('');
  if(!append&&floatingEdition)document.querySelector('#collection-viewport')?.scrollTo({top:0,behavior:'instant'});
- document.querySelector('#result-count').textContent=`${pad(visible.length)} ${visible.length===1?'OBJECT':'OBJECTS'} / ${collectionScope==='both'?'COLLECTION + LEGACY':collectionScope.toUpperCase()}${q||activeFilters.size||activeRatings.size?' / FILTERED':''}`;
+ document.querySelector('#result-count').textContent=`${pad(visible.length)} ${visible.length===1?'OBJECT':'OBJECTS'} / ${collectionScope==='both'?'ALL':collectionScope==='legacy'?'FORMATIVE':'COLLECTION'}${q||activeFilters.size||activeRatings.size?' / FILTERED':''}`;
  document.querySelector('#empty-state').hidden=visible.length>0;
  const more=document.querySelector('#load-more');more.hidden=shown.length>=visible.length;more.innerHTML=`Load more <span class="remaining-count">${visible.length-shown.length} remaining</span><span aria-hidden="true">↓</span>`;
  document.querySelector('#shown-count').textContent=visible.length?`${shown.length} / ${visible.length} RECORDS`:'';
@@ -257,7 +257,7 @@ function sameWorkReviews(e){
 }
 function memberReviewMarkup(r){
  const {body}=detailSources(r);
- return `<article class="member-review"><header class="member-review-head"><span class="member-review-name"><span class="member-dot" style="background:${memberColor(r.member)}"></span>${escapeHTML(r.member||'Unknown member')}</span><span class="member-review-rating" style="color:${memberColor(r.member)}">${escapeHTML(ratingText(r))}${isLegacy(r)?'<span class="legacy-badge">Legacy</span>':''}</span></header>${typeof r.rating==='number'?`<div class="rating-row">${ratingBarMarkup(r)}</div>`:''}<p class="detail-note${r.note?'':' note-empty'}"${jaLang(r.note)}>${r.note?escapeHTML(r.note):'No note has been recorded yet.'}</p>${body?`<div class="member-review-body"${jaLang(body)}>${renderMarkdown(body)}</div>`:''}</article>`;
+ return `<article class="member-review"><header class="member-review-head"><span class="member-review-name"><span class="member-dot" style="background:${memberColor(r.member)}"></span>${escapeHTML(r.member||'Unknown member')}</span><span class="member-review-rating" style="color:${memberColor(r.member)}">${escapeHTML(ratingText(r))}${isLegacy(r)?'<span class="legacy-badge">Formative</span>':''}</span></header>${typeof r.rating==='number'?`<div class="rating-row">${ratingBarMarkup(r)}</div>`:''}<p class="detail-note${r.note?'':' note-empty'}"${jaLang(r.note)}>${r.note?escapeHTML(r.note):'No note has been recorded yet.'}</p>${body?`<div class="member-review-body"${jaLang(body)}>${renderMarkdown(body)}</div>`:''}</article>`;
 }
 function showEntry(id,button=null){
  if(detailDialog.open)return;
@@ -270,7 +270,7 @@ function showEntry(id,button=null){
  const checkedOn=reviewFacts.filter(([k])=>k==='SCORES CHECKED ON').map(([,v])=>v);
  facts.push(...reviewFacts.filter(([k])=>k!=='SCORES CHECKED ON'));
  const scoreContext=checkedOn.length?`<span class="score-context">Checked ${checkedOn.map(v=>escapeHTML(formatDate(v))).join(', ')}. Scores may change.</span>`:'';
- document.querySelector('#detail-content').innerHTML=`<div class="detail-layout"><div class="detail-visual">${coverMarkup(e,true)}</div><div class="detail-body"><h2 id="detail-title" class="${isJapanese(e.title)?'jp':''}"${jaLang(e.title)}>${escapeHTML(e.title)}</h2>${e.originalTitle?.trim() && e.originalTitle.trim()!==e.title?`<p class="original-title"${jaLang(e.originalTitle)}>${escapeHTML(e.originalTitle)}</p>`:''}<p class="detail-creator"${jaLang(e.creator)}>${escapeHTML(e.creator||'Creator unrecorded')}</p><div class="detail-tags">${e.tags.map(t=>`<span>${escapeHTML(t)}</span>`).join('')}</div>${reviews?'':`<p class="detail-note${e.note?'':' note-empty'}"${jaLang(e.note)}>${e.note?escapeHTML(e.note):'No note has been recorded yet.'}</p>`}<dl class="detail-facts">${facts.map(([k,v])=>`<div><dt>${escapeHTML(k)}</dt><dd>${escapeHTML(v)}${k==='PERSONAL RATING'&&isLegacy(e)?'<span class="legacy-badge">Legacy</span>':''}${k==='PERSONAL RATING'?ratingBarMarkup(e):''}</dd></div>`).join('')}</dl><div class="source-links">${links.map(([k,u])=>`<a href="${escapeHTML(safeURL(u))}" target="_blank" rel="noopener noreferrer">${k==='リンク'?'Listen online':escapeHTML(k)} ↗</a>`).join('')}</div></div></div>${reviews?`<section class="member-reviews"><h3 class="member-reviews-heading">MEMBER REVIEWS</h3>${reviews.map(memberReviewMarkup).join('')}</section>`:`<section class="entry-body"${jaLang(body)}>${body?renderMarkdown(body):'<p class="note-empty">This record has no written entry yet.</p>'}</section>`}<p class="detail-disclaimer"><a href="${escapeHTML(safeURL(e.url))}" target="_blank" rel="noopener noreferrer">Open the log sheet</a>${scoreContext}</p>`;
+ document.querySelector('#detail-content').innerHTML=`<div class="detail-layout"><div class="detail-visual">${coverMarkup(e,true)}</div><div class="detail-body"><h2 id="detail-title" class="${isJapanese(e.title)?'jp':''}"${jaLang(e.title)}>${escapeHTML(e.title)}</h2>${e.originalTitle?.trim() && e.originalTitle.trim()!==e.title?`<p class="original-title"${jaLang(e.originalTitle)}>${escapeHTML(e.originalTitle)}</p>`:''}<p class="detail-creator"${jaLang(e.creator)}>${escapeHTML(e.creator||'Creator unrecorded')}</p><div class="detail-tags">${e.tags.map(t=>`<span>${escapeHTML(t)}</span>`).join('')}</div>${reviews?'':`<p class="detail-note${e.note?'':' note-empty'}"${jaLang(e.note)}>${e.note?escapeHTML(e.note):'No note has been recorded yet.'}</p>`}<dl class="detail-facts">${facts.map(([k,v])=>`<div><dt>${escapeHTML(k)}</dt><dd>${escapeHTML(v)}${k==='PERSONAL RATING'&&isLegacy(e)?'<span class="legacy-badge">Formative</span>':''}${k==='PERSONAL RATING'?ratingBarMarkup(e):''}</dd></div>`).join('')}</dl><div class="source-links">${links.map(([k,u])=>`<a href="${escapeHTML(safeURL(u))}" target="_blank" rel="noopener noreferrer">${k==='リンク'?'Listen online':escapeHTML(k)} ↗</a>`).join('')}</div></div></div>${reviews?`<section class="member-reviews"><h3 class="member-reviews-heading">MEMBER REVIEWS</h3>${reviews.map(memberReviewMarkup).join('')}</section>`:`<section class="entry-body"${jaLang(body)}>${body?renderMarkdown(body):'<p class="note-empty">This record has no written entry yet.</p>'}</section>`}<p class="detail-disclaimer"><a href="${escapeHTML(safeURL(e.url))}" target="_blank" rel="noopener noreferrer">Open the log sheet</a>${scoreContext}</p>`;
  const reveal=()=>openArchiveDialog(detailDialog,button);
  if(floatingEdition&&typeof detailArtworkTransition!=='undefined')detailArtworkTransition.open(detailDialog,button,reveal);
  else reveal();
