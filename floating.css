@@ -361,3 +361,12 @@ html.section-sliding,html.collection-settling{scroll-behavior:auto!important}
 #detail-dialog.artwork-detail>.detail-artwork-flight{z-index:6}
 
 .category-filters{margin:4px 0 22px}
+
+.member-reviews{border-top:1px solid var(--plate);padding-top:30px;margin-top:32px}
+.member-reviews-heading{font-size:12px;letter-spacing:.08em;margin:0 0 4px}
+.member-review{padding:20px 0;border-bottom:1px solid var(--plate)}
+.member-review:last-child{border-bottom:0;padding-bottom:4px}
+.member-review-head{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:10px}
+.member-review-name{font-size:14px;font-weight:600}
+.member-review-rating{font-size:14px;color:var(--lime)}
+.member-review-body p{font-size:14px;line-height:1.85;margin:12px 0;overflow-wrap:anywhere}
