@@ -73,6 +73,7 @@ function buildEntries() {
       if (Number.isInteger(rating)) rating = Math.floor(rating);
     }
     entries.push({
+      _row: r + 1,
       id: md5Hex(member + '|' + category + '|' + title + '|' + (experienced || '') + '|' + (released || '')),
       source: SOURCES[category], member: member, title: title,
       originalTitle: String(row.originalTitle || '').trim(), creator: String(row.creator || '').trim(),
@@ -87,11 +88,99 @@ function buildEntries() {
       tags: String(row.tags || '').replace(/、/g, ',').split(',').map(t => t.trim()).filter(Boolean),
       note: String(row.note || '').trim(), body: String(row.body || '').trim(),
       format: null, scores: {}, links: {},
-      url: SpreadsheetApp.getActiveSpreadsheet().getUrl(),
+      url: null,
       cover: String(row.cover || '').trim() || null
     });
   }
   return entries;
+}
+
+/** ---------- automatic cover art ---------- */
+
+function githubHeaders(token) {
+  return { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json' };
+}
+
+function githubFileExists(owner, repo, token, path) {
+  const url = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path + '?ref=main';
+  const res = UrlFetchApp.fetch(url, { headers: githubHeaders(token), muteHttpExceptions: true });
+  return res.getResponseCode() === 200;
+}
+
+function githubUpload(owner, repo, token, path, bytes, message) {
+  const url = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path;
+  const payload = { message: message, content: Utilities.base64Encode(bytes), branch: 'main' };
+  const res = UrlFetchApp.fetch(url, { method: 'put', headers: githubHeaders(token),
+    contentType: 'application/json', payload: JSON.stringify(payload), muteHttpExceptions: true });
+  if (res.getResponseCode() >= 300) throw new Error('GitHub image upload failed: ' + res.getResponseCode());
+}
+
+function normalizeTitle(s) {
+  return String(s || '').toLowerCase().replace(/[\s　・:：/／\-—–'"“”‘’()（）\[\]【】]/g, '');
+}
+
+function findArtworkUrl(entry) {
+  const term = encodeURIComponent((entry.title + ' ' + (entry.creator || '')).trim());
+  try {
+    if (entry.source === 'music' || entry.source === 'movies') {
+      const media = entry.source === 'music' ? 'music' : 'movie';
+      const entity = entry.source === 'music' ? 'album' : 'movie';
+      for (const country of ['JP', 'US']) {
+        const url = 'https://itunes.apple.com/search?term=' + term + '&media=' + media +
+                    '&entity=' + entity + '&limit=5&country=' + country;
+        const data = JSON.parse(UrlFetchApp.fetch(url, { muteHttpExceptions: true }).getContentText());
+        for (const r of (data.results || [])) {
+          const name = r.collectionName || r.trackName || '';
+          if (r.artworkUrl100 && normalizeTitle(name).includes(normalizeTitle(entry.title).slice(0, 8))) {
+            return r.artworkUrl100.replace('100x100bb.jpg', '1200x1200bb.jpg');
+          }
+        }
+        if ((data.results || []).length && data.results[0].artworkUrl100) {
+          return data.results[0].artworkUrl100.replace('100x100bb.jpg', '1200x1200bb.jpg');
+        }
+      }
+    }
+    if (entry.source === 'books') {
+      const q = encodeURIComponent('intitle:' + entry.title);
+      const url = 'https://www.googleapis.com/books/v1/volumes?q=' + q + '&maxResults=3';
+      const data = JSON.parse(UrlFetchApp.fetch(url, { muteHttpExceptions: true }).getContentText());
+      for (const item of (data.items || [])) {
+        const links = (item.volumeInfo || {}).imageLinks || {};
+        if (links.thumbnail) return links.thumbnail.replace('http://', 'https://');
+      }
+    }
+  } catch (e) { /* artwork lookup is best-effort */ }
+  return null;
+}
+
+/**
+ * Fill empty covers: a cover cell holding an http(s) URL is treated as a
+ * manual choice and downloaded; an empty cell triggers an artwork search
+ * (music / movies via iTunes, books via Google Books; other categories keep
+ * the typographic cover). Resolved covers are uploaded to the repo and the
+ * resulting path is written back into the sheet, so members can override by
+ * replacing the cell with another URL or path.
+ */
+function resolveCovers(entries, sheet, coverCol, gh) {
+  let fetched = 0;
+  entries.forEach((entry, i) => {
+    const cell = entry.cover || '';
+    if (cell.startsWith('assets/')) return;
+    if (fetched >= 20) return; // stay well inside fetch quotas; the hourly run catches up
+    const sourceUrl = cell.startsWith('http') ? cell : findArtworkUrl(entry);
+    if (!sourceUrl) return;
+    const path = 'assets/covers/' + entry.id + '.jpg';
+    try {
+      if (!githubFileExists(gh.owner, gh.repo, gh.token, path)) {
+        const img = UrlFetchApp.fetch(sourceUrl, { muteHttpExceptions: true });
+        if (img.getResponseCode() !== 200) return;
+        githubUpload(gh.owner, gh.repo, gh.token, path, img.getBlob().getBytes(), 'Add cover for ' + entry.title);
+      }
+      entry.cover = path;
+      sheet.getRange(entry._row, coverCol + 1).setValue(path);
+      fetched++;
+    } catch (e) { /* leave the typographic cover on failure */ }
+  });
 }
 
 function syncMemoriesToGitHub() {
@@ -102,6 +191,10 @@ function syncMemoriesToGitHub() {
   if (!owner || !repo || !token) throw new Error('Script Properties GITHUB_OWNER / GITHUB_REPO / GITHUB_TOKEN are missing.');
 
   const entries = buildEntries();
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('entries');
+  const header = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
+  resolveCovers(entries, sheet, header.indexOf('cover'), { owner: owner, repo: repo, token: token });
+  entries.forEach(e => { delete e._row; });
   if (!entries.length) throw new Error('No rows found; site left unchanged.');
   const now = new Date();
   const archive = {
