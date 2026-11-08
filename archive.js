@@ -290,7 +290,7 @@ function updateMemberButtons(){
 }
 function initMemberFilters(){
  const box=document.querySelector('#member-filters');if(!box)return;
- const members=[...new Set(entries.map(e=>e.member).filter(Boolean))];
+ const members=[...new Set(['Naoki','Toshi','Ryota','Ryusei',...entries.map(e=>e.member).filter(Boolean)])];
  box.innerHTML=['all',...members].map(m=>`<button class="filter" data-member="${escapeHTML(m)}" aria-pressed="false">${m==='all'?'All members':escapeHTML(m)}</button>`).join('');
  box.addEventListener('click',event=>{const b=event.target.closest('[data-member]');if(!b)return;activeMember=b.dataset.member;displayLimit=12;updateMemberButtons();render();});
  updateMemberButtons();
