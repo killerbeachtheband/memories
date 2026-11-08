@@ -27,7 +27,7 @@
   menuResult.textContent=count?`${count} ${count===1?'object':'objects'}`:'No matches. Try another search.';
   viewResults.disabled=count===0;
   viewResults.innerHTML=count?`View ${count} ${count===1?'object':'objects'} <span aria-hidden="true">↗</span>`:'No matches';
-  document.querySelector('#menu-reset').hidden=collectionScope==='both'&&!document.querySelector('#search').value&&!document.querySelector('.filter.active:not([data-filter="all"]),.rating-filter.active');
+  document.querySelector('#menu-reset').hidden=collectionScope==='both'&&!document.querySelector('#search').value&&!document.querySelector('.filter.active:not([data-filter="all"]):not([data-sort]),.rating-filter.active');
  }
  new MutationObserver(updateResults).observe(document.querySelector('#result-count'),{childList:true,characterData:true,subtree:true});updateResults();
  document.querySelector('#menu-reset').addEventListener('click',()=>{
