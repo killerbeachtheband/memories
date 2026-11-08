@@ -246,8 +246,8 @@ const MEMBER_COLORS={Naoki:'#FF4D00',Toshi:'#2563EB',Ryota:'#0E9F6E',Ryusei:'#7C
 const memberColor=m=>MEMBER_COLORS[m]||'#6B7280';
 function ratingBarMarkup(r){
  if(typeof r.rating!=='number')return '';
- const pct=Math.max(0,Math.min(100,r.rating*10));
- return `<span class="rating-bar" role="img" aria-label="Rating ${escapeHTML(ratingText(r))}"><span class="rating-fill" style="width:${pct}%;background:${memberColor(r.member)}"></span></span>`;
+ const ticks=Array.from({length:10},(_,i)=>`<i class="${i<r.rating?'on':''}"></i>`).join('');
+ return `<span class="rating-wrap"><span class="rating-line" style="--mc:${memberColor(r.member)}" role="img" aria-label="Rating ${escapeHTML(ratingText(r))}">${ticks}</span><span class="rating-num">${escapeHTML(ratingText(r))}</span></span>`;
 }
 function sameWorkReviews(e){
  const group=entries.filter(item=>workKey(item)===workKey(e));
@@ -257,13 +257,13 @@ function sameWorkReviews(e){
 }
 function memberReviewMarkup(r){
  const {body}=detailSources(r);
- return `<article class="member-review"><header class="member-review-head"><span class="member-review-name"><span class="member-dot" style="background:${memberColor(r.member)}"></span>${escapeHTML(r.member||'Unknown member')}</span><span class="member-review-rating" style="color:${memberColor(r.member)}">${escapeHTML(ratingText(r))}${isFormative(r)?'<span class="formative-badge">Formative</span>':''}</span></header>${typeof r.rating==='number'?`<div class="rating-row">${ratingBarMarkup(r)}</div>`:''}<p class="detail-note${r.note?'':' note-empty'}"${jaLang(r.note)}>${r.note?escapeHTML(r.note):'No note has been recorded yet.'}</p>${body?`<div class="member-review-body"${jaLang(body)}>${renderMarkdown(body)}</div>`:''}</article>`;
+ return `<article class="member-review"><header class="member-review-head"><span class="member-review-name"><span class="member-dot" style="background:${memberColor(r.member)}"></span>${escapeHTML(r.member||'Unknown member')}</span>${isFormative(r)?'<span class="member-review-rating"><span class="formative-badge">Formative</span></span>':''}</header>${typeof r.rating==='number'?`<div class="rating-row">${ratingBarMarkup(r)}</div>`:''}<p class="detail-note${r.note?'':' note-empty'}"${jaLang(r.note)}>${r.note?escapeHTML(r.note):'No note has been recorded yet.'}</p>${body?`<div class="member-review-body"${jaLang(body)}>${renderMarkdown(body)}</div>`:''}</article>`;
 }
 function showEntry(id,button=null){
  if(detailDialog.open)return;
  const e=entries.find(item=>item.id===id);if(!e)return;
  const reviews=sameWorkReviews(e);
- const facts=reviews?[[e.dateLabel||(e.source==='music'?'RELEASED ON':'EXPERIENCED ON'),formatDate(collectionDate(e))]]:[['PERSONAL RATING',ratingText(e)],[e.dateLabel||(e.source==='music'?'RELEASED ON':'EXPERIENCED ON'),formatDate(collectionDate(e))]];
+ const facts=reviews?[[e.dateLabel||(e.source==='music'?'RELEASED ON':'EXPERIENCED ON'),formatDate(collectionDate(e))]]:[['PERSONAL RATING',''],[e.dateLabel||(e.source==='music'?'RELEASED ON':'EXPERIENCED ON'),formatDate(collectionDate(e))]];
  if(!reviews&&e.member)facts.splice(1,0,['MEMBER',e.member]);
  if(e.format)facts.push(['FORMAT',e.format]);
  const {links,body,reviewFacts}=detailSources(e);
