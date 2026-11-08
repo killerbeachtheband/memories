@@ -101,15 +101,17 @@ function githubHeaders(token) {
   return { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json' };
 }
 
-function githubFileExists(owner, repo, token, path) {
+function githubFileSha(owner, repo, token, path) {
   const url = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path + '?ref=main';
   const res = UrlFetchApp.fetch(url, { headers: githubHeaders(token), muteHttpExceptions: true });
-  return res.getResponseCode() === 200;
+  if (res.getResponseCode() !== 200) return null;
+  try { return JSON.parse(res.getContentText()).sha || null; } catch (e) { return null; }
 }
 
-function githubUpload(owner, repo, token, path, bytes, message) {
+function githubUpload(owner, repo, token, path, bytes, message, sha) {
   const url = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path;
   const payload = { message: message, content: Utilities.base64Encode(bytes), branch: 'main' };
+  if (sha) payload.sha = sha;
   const res = UrlFetchApp.fetch(url, { method: 'put', headers: githubHeaders(token),
     contentType: 'application/json', payload: JSON.stringify(payload), muteHttpExceptions: true });
   if (res.getResponseCode() >= 300) throw new Error('GitHub image upload failed: ' + res.getResponseCode());
@@ -193,10 +195,11 @@ function resolveCovers(entries, sheet, coverCol, gh) {
     if (!sourceUrl) return;
     const path = 'assets/covers/' + entry.id + '.jpg';
     try {
-      if (!githubFileExists(gh.owner, gh.repo, gh.token, path)) {
+      const sha = githubFileSha(gh.owner, gh.repo, gh.token, path);
+      if (!sha || cell.startsWith('http')) {
         const img = UrlFetchApp.fetch(sourceUrl, { muteHttpExceptions: true });
         if (img.getResponseCode() !== 200) return;
-        githubUpload(gh.owner, gh.repo, gh.token, path, img.getBlob().getBytes(), 'Add cover for ' + entry.title);
+        githubUpload(gh.owner, gh.repo, gh.token, path, img.getBlob().getBytes(), 'Add cover for ' + entry.title, sha);
       }
       entry.cover = path;
       sheet.getRange(entry._row, coverCol + 1).setValue(path);
