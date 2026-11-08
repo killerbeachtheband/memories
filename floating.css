@@ -386,6 +386,7 @@ html.section-sliding,html.collection-settling{scroll-behavior:auto!important}
 
 
 .rating-row{margin:0 0 12px}
-.rating-bar{display:block;height:6px;border-radius:9999px;background:var(--plate);overflow:hidden}
-.rating-fill{display:block;height:100%;border-radius:9999px}
+.rating-bar{display:block;height:2px;background:var(--plate);position:relative}
+.rating-fill{display:block;height:100%;background:#8A8378}
+.rating-grid{position:absolute;left:0;right:0;top:-1px;height:4px;background:repeating-linear-gradient(90deg,transparent 0,transparent calc(10% - 1px),#fff calc(10% - 1px),#fff 10%);pointer-events:none}
 .detail-facts .rating-bar{margin-top:8px;max-width:180px}
