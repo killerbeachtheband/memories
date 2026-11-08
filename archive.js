@@ -138,6 +138,7 @@ function renderMarkdown(markdown){
 function initFilters(){
  const order=['all','映画','音楽','アート','舞台・ライブ','建築','ゲーム','本','その他'];
  filters.innerHTML=order.filter(c=>c==='all'||entries.some(e=>e.category===c)).map(c=>`<button class="filter" data-filter="${escapeHTML(c)}" aria-pressed="false">${categoryNames[c]} <sup></sup></button>`).join('');
+ const front=document.querySelector('#category-filters');if(front)front.innerHTML=filters.innerHTML;
  document.querySelector('#collection-scope')?.addEventListener('click',event=>{
   const button=event.target.closest('[data-scope]');if(!button)return;
   collectionScope=button.dataset.scope;displayLimit=12;updateFilterButtons();render();
@@ -155,7 +156,7 @@ function updateFilterButtons(){
   button.querySelector('sup').textContent=pad(count);
  });
  const help=document.querySelector('#scope-help');if(help&&help.textContent!==filterHelp[collectionScope])help.textContent=filterHelp[collectionScope];
- filters.querySelectorAll('[data-filter]').forEach(button=>{
+ [...filters.querySelectorAll('[data-filter]'),...(document.querySelector('#category-filters')?.querySelectorAll?.('[data-filter]')||[])].forEach(button=>{
   const key=button.dataset.filter,selected=key==='all'?activeFilters.size===0:activeFilters.has(key);
   button.classList.toggle('active',selected);button.setAttribute('aria-pressed',String(selected));
   const count=entries.filter(e=>matchesRating(e)&&matchesCollectionFilter(e,key==='all'?new Set():new Set([key]))).length;
@@ -260,14 +261,16 @@ function renderFavorites(){
  document.querySelector('.favorite-grid').innerHTML=favorites.map((e,i)=>`<button class="favorite" data-entry="${e.id}" aria-label="Hall of fame: ${escapeHTML(e.title)}"><span class="favorite-number">${['I.','II.','III.','IV.'][i]||i+1}</span><div class="round-art ${e.cover?'':'round-fallback'}">${e.cover?`<img src="${escapeHTML(e.cover)}" alt="${escapeHTML(e.title)} — cover artwork" loading="lazy">`:`<span>${escapeHTML(e.originalTitle||e.title)}</span>`}</div><span class="favorite-kind">${e.label} / ${e.source==='music'?'GOAT':'ALL-TIME BEST'}</span><h3 class="${isJapanese(e.title)?'jp':''}">${escapeHTML(e.title)}</h3><span class="favorite-link">${escapeHTML(ratingText(e))} <span aria-hidden="true">↗</span></span></button>`).join('');
  document.querySelector('#favorites-count').textContent=`${pad(favorites.length)} PERSONAL FAVORITES`;
 }
-filters.addEventListener('click',event=>{
+function onFilterClick(event){
  const b=event.target.closest('[data-filter]');if(!b)return;
  const key=b.dataset.filter;
  if(key==='all'){activeFilters.clear();}
  else if(activeFilters.has(key))activeFilters.delete(key);
  else activeFilters.add(key);
  displayLimit=12;updateFilterButtons();updateRatingButtons();render();
-});
+}
+filters.addEventListener('click',onFilterClick);
+document.querySelector('#category-filters')?.addEventListener('click',onFilterClick);
 search.addEventListener('input',()=>{displayLimit=12;render();});
 document.querySelector('#load-more').addEventListener('click',()=>loadNextRecords(true));
 document.addEventListener('click',event=>{const b=event.target.closest('[data-entry]');if(b)showEntry(b.dataset.entry,b);});
