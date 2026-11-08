@@ -9,8 +9,9 @@ const start=source.indexOf("document.querySelector('#detail-content').innerHTML=
 const statement=source.slice(start,source.indexOf('\n',start));
 const renderDetail=(e,body)=>{
  const target={};
- const context=vm.createContext({document:{querySelector:()=>target},e,facts:[],links:[],body,scoreContext:'',reviews:null,memberReviewMarkup:()=>'',ratingBarMarkup:()=>'',coverMarkup:()=>'',isFormative:()=>false,safeURL:u=>u,renderMarkdown:v=>`<p>${v}</p>`});
- vm.runInContext(source.slice(source.indexOf('const escapeHTML'),source.indexOf('\n',source.indexOf('const jaLang')))+'\n'+statement,context);
+ const memberReview=source.slice(source.indexOf('function memberReviewMarkup'),source.indexOf('\n}',source.indexOf('function memberReviewMarkup'))+2);
+ const context=vm.createContext({document:{querySelector:()=>target},e,facts:[],links:[],body,scoreContext:'',reviews:[e],ratingBarMarkup:()=>'',coverMarkup:()=>'',isFormative:()=>false,safeURL:u=>u,renderMarkdown:v=>`<p>${v}</p>`,detailSources:()=>({body}),ratingText:r=>typeof r.rating==='number'?`${r.rating} / 10`:'Not rated yet'});
+ vm.runInContext(source.slice(source.indexOf('const escapeHTML'),source.indexOf('\n',source.indexOf('const jaLang')))+'\n'+memberReview+'\n'+statement,context);
  return target.innerHTML;
 };
 test('index.html has exactly one h1 reading Memories and keeps the skip link',()=>{
@@ -25,7 +26,8 @@ test('Japanese detail text is tagged lang="ja"',()=>{
  assert.match(out,/<p class="original-title">Your Name<\/p>/);
  assert.match(out,/<p class="detail-creator" lang="ja">/);
  assert.match(out,/<p class="detail-note" lang="ja">/);
- assert.match(out,/<section class="entry-body" lang="ja">/);
+ assert.match(out,/<div class="member-review-body" lang="ja">/);
+ assert.match(out,/<section class="member-reviews">/);
 });
 test('English-only detail text gets no lang attribute',()=>{
  const out=renderDetail({title:'Blade Runner',originalTitle:'ブレードランナー',creator:'Ridley Scott',tags:[],note:'',url:''},'');
@@ -33,6 +35,6 @@ test('English-only detail text gets no lang attribute',()=>{
  assert.match(out,/<p class="original-title" lang="ja">/);
  assert.match(out,/<p class="detail-creator">Ridley Scott<\/p>/);
  assert.match(out,/<p class="detail-note note-empty">/);
- assert.match(out,/<section class="entry-body">/);
+ assert.match(out,/<section class="member-reviews">/);
  assert.equal((out.match(/lang="ja"/g)||[]).length,1);
 });
