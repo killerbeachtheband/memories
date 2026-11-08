@@ -9,7 +9,7 @@ const start=source.indexOf("document.querySelector('#detail-content').innerHTML=
 const statement=source.slice(start,source.indexOf('\n',start));
 const renderDetail=(e,body)=>{
  const target={};
- const context=vm.createContext({document:{querySelector:()=>target},e,facts:[],links:[],body,scoreContext:'',coverMarkup:()=>'',isLegacy:()=>false,safeURL:u=>u,renderMarkdown:v=>`<p>${v}</p>`});
+ const context=vm.createContext({document:{querySelector:()=>target},e,facts:[],links:[],body,scoreContext:'',reviews:null,memberReviewMarkup:()=>'',coverMarkup:()=>'',isLegacy:()=>false,safeURL:u=>u,renderMarkdown:v=>`<p>${v}</p>`});
  vm.runInContext(source.slice(source.indexOf('const escapeHTML'),source.indexOf('\n',source.indexOf('const jaLang')))+'\n'+statement,context);
  return target.innerHTML;
 };
