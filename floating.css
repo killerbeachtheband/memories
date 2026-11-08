@@ -359,3 +359,5 @@ html.section-sliding,html.collection-settling{scroll-behavior:auto!important}
 .detail-object-scene .detail-object-flight{pointer-events:none;margin:0;opacity:1;animation:none;transition:none}
 .detail-object-flight .stage-label{display:none!important}
 #detail-dialog.artwork-detail>.detail-artwork-flight{z-index:6}
+
+.category-filters{margin:4px 0 22px}
