@@ -26,7 +26,13 @@ archive = read_archive(root / "data.js")
 original_bytes = published_bytes = 0
 for entry in archive["entries"]:
     if entry.get("cover"):
-        relative, before, after = optimize_cover(root, dest, entry["cover"])
+        try:
+            relative, before, after = optimize_cover(root, dest, entry["cover"])
+        except FileNotFoundError:
+            # A cover path without its file must not break the whole publish;
+            # the entry falls back to its typographic cover on the site.
+            entry["cover"] = None
+            continue
         entry["cover"] = relative
         original_bytes += before
         published_bytes += after
