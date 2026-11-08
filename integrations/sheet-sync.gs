@@ -20,7 +20,7 @@ const SOURCES = { '映画': 'movies', '音楽': 'music', 'アート': 'art', '�
 const LABELS = { '映画': 'CINEMA', '本': 'LITERATURE', '音楽': 'MUSIC', 'アート': 'ART',
                  '舞台・ライブ': 'LIVE', 'ゲーム': 'GAMES', '建築': 'ARCHITECTURE', 'その他': 'OTHER' };
 const COLUMNS = ['member', 'category', 'title', 'originalTitle', 'creator', 'rating', 'tags',
-                 'experiencedDate', 'releaseDate', 'hallOfFame', 'legacy', 'note', 'body'];
+                 'experiencedDate', 'releaseDate', 'hallOfFame', 'legacy', 'note', 'body', 'cover'];
 
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('MEMORIES')
@@ -87,7 +87,8 @@ function buildEntries() {
       tags: String(row.tags || '').replace(/、/g, ',').split(',').map(t => t.trim()).filter(Boolean),
       note: String(row.note || '').trim(), body: String(row.body || '').trim(),
       format: null, scores: {}, links: {},
-      url: SpreadsheetApp.getActiveSpreadsheet().getUrl(), cover: null
+      url: SpreadsheetApp.getActiveSpreadsheet().getUrl(),
+      cover: String(row.cover || '').trim() || null
     });
   }
   return entries;
