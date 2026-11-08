@@ -74,7 +74,7 @@ def normalize(row, sheet_url):
         experiencedDate=experienced, releaseDate=released, readingStartedDate=None, visitedDate=None,
         createdDate=None, tags=[t.strip() for t in (row.get("tags") or "").replace("、", ",").split(",") if t.strip()],
         note=(row.get("note") or "").strip(), body=(row.get("body") or "").strip(),
-        format=None, scores={}, links={}, url=sheet_url, cover=None)
+        format=None, scores={}, links={}, url=sheet_url, cover=(row.get("cover") or "").strip() or None)
 
 
 def read_rows(args):
