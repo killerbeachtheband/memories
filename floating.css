@@ -263,7 +263,7 @@ html.section-sliding,html.collection-settling{scroll-behavior:auto!important}
 .collection-layout svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round}
 
 /* Quiet metadata beside the personal score, driven by the Notion checkbox. */
-.legacy-badge{display:inline-flex;align-items:center;margin-left:8px;padding:3px 8px;border-radius:9999px;background:#e9dffa;color:#583585;font-size:11px;font-weight:500;line-height:1.2;vertical-align:middle;white-space:nowrap}
+.formative-badge{display:inline-flex;align-items:center;margin-left:8px;padding:3px 8px;border-radius:9999px;background:#e9dffa;color:#583585;font-size:11px;font-weight:500;line-height:1.2;vertical-align:middle;white-space:nowrap}
 
 /* Let the artwork travel independently in the dialog's top layer. */
 #detail-dialog.artwork-detail{animation:none!important;opacity:1;translate:none;scale:none;transform:none}
