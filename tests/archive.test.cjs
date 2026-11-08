@@ -128,6 +128,10 @@ function archiveDOM(entryData){
   const sup=add(button,'');sup.tagName='SUP';
  }
  add(document,'scope-help');
+ const sort=add(document,'sort-order');
+ for(const value of ['shuffle','newest']){
+  const button=add(sort,'',{dataset:{sort:value}});button.tagName='BUTTON';
+ }
  add(document,'',{className:'filters'});
  const ratings=add(document,'rating-filters');
  add(ratings,'goat-help');add(ratings,'rating-summary');add(ratings,'rating-clear');
@@ -180,6 +184,24 @@ test('scope, medium and rating clicks refresh counts and help, and public reset 
  assert.equal(document.querySelector('#search').value,'');
  assertScopeDOM(document,['03','02','05'],'All records, including the Formative picks.','both');
  assert.equal(document.querySelector('#result-count').textContent,'05 OBJECTS / ALL');
+});
+
+test('sort order defaults to Shuffle and Newest lists the latest registered records first',()=>{
+ const document=archiveDOM();
+ const shuffle=document.querySelector('[data-sort="shuffle"]'),newest=document.querySelector('[data-sort="newest"]');
+ assert(shuffle&&newest,'sort controls exist');
+ assert.equal(shuffle.getAttribute('aria-pressed'),'true');
+ assert.equal(newest.getAttribute('aria-pressed'),'false');
+ assert.deepEqual(document.withAllRecords(()=>visibleIds(document)).sort(),['0','1','2','3','4']);
+ newest.click();
+ assert.equal(newest.getAttribute('aria-pressed'),'true');
+ assert.equal(shuffle.getAttribute('aria-pressed'),'false');
+ // Fake entries register in id order; rated ids are 0-4, so Newest reverses them.
+ assert.deepEqual(document.withAllRecords(()=>visibleIds(document)),['4','3','2','1','0']);
+ shuffle.click();
+ assert.equal(shuffle.getAttribute('aria-pressed'),'true');
+ assert.equal(newest.getAttribute('aria-pressed'),'false');
+ assert.deepEqual(document.withAllRecords(()=>visibleIds(document)).sort(),['0','1','2','3','4']);
 });
 
 test('search input changes results without changing scope or medium facet counts',()=>{
