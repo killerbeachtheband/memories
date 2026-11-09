@@ -8,6 +8,8 @@ let sortMode='shuffle';
 let displayEntries=shuffled(registeredEntries);
 function updateSortButtons(){
  document.querySelectorAll('[data-sort]').forEach(b=>{const s=b.dataset.sort===sortMode;b.classList.toggle('active',s);b.setAttribute('aria-pressed',String(s));});
+ const pill=document.querySelector('#sort-order');
+ if(pill)pill.setAttribute('aria-label',sortMode==='shuffle'?'Sort: Shuffle — tap to switch to Newest':'Sort: Newest — tap to switch to Shuffle');
 }
 function applySort(mode){
  sortMode=mode;
@@ -156,10 +158,9 @@ function initFilters(){
   const button=event.target.closest('[data-scope]');if(!button)return;
   collectionScope=button.dataset.scope;displayLimit=12;updateFilterButtons();render();
  });
- document.querySelector('#sort-order')?.addEventListener('click',event=>{
-  const button=event.target.closest('[data-sort]');if(!button)return;
-  applySort(button.dataset.sort);
- });
+ const sortPill=document.querySelector('#sort-order');
+ sortPill?.addEventListener('click',()=>applySort(sortMode==='shuffle'?'newest':'shuffle'));
+ sortPill?.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();applySort(sortMode==='shuffle'?'newest':'shuffle');}});
  updateSortButtons();
  updateFilterButtons();
 }
@@ -277,9 +278,9 @@ function memberReviewMarkup(r){
  const {body}=detailSources(r);
  return `<article class="member-review"><header class="member-review-head"><span class="member-review-name">${escapeHTML(r.member||'Unknown member')}</span><span class="member-review-rating">${escapeHTML(ratingText(r))}${isFormative(r)?'<span class="formative-badge">Formative</span>':''}</span></header>${typeof r.rating==='number'?`<div class="rating-row">${ratingBarMarkup(r)}</div>`:''}<p class="detail-note${r.note?'':' note-empty'}"${jaLang(r.note)}>${r.note?escapeHTML(r.note):'No note has been recorded yet.'}</p>${body?`<div class="member-review-body"${jaLang(body)}>${renderMarkdown(body)}</div>`:''}</article>`;
 }
-function showEntry(id,button=null){
- if(detailDialog.open)return;
- const e=entries.find(item=>item.id===id);if(!e)return;
+let currentDetailId=null;
+function renderDetail(e){
+ currentDetailId=e.id;
  const reviews=sameWorkReviews(e)||[e];
  const facts=[[e.dateLabel||(e.source==='music'?'RELEASED ON':'EXPERIENCED ON'),formatDate(collectionDate(e))]];
  if(e.format)facts.push(['FORMAT',e.format]);
@@ -288,9 +289,59 @@ function showEntry(id,button=null){
  facts.push(...reviewFacts.filter(([k])=>k!=='SCORES CHECKED ON'));
  const scoreContext=checkedOn.length?`<span class="score-context">Checked ${checkedOn.map(v=>escapeHTML(formatDate(v))).join(', ')}. Scores may change.</span>`:'';
  document.querySelector('#detail-content').innerHTML=`<div class="detail-layout"><div class="detail-visual">${coverMarkup(e,true)}</div><div class="detail-body"><h2 id="detail-title" class="${isJapanese(e.title)?'jp':''}"${jaLang(e.title)}>${escapeHTML(e.title)}</h2>${e.originalTitle?.trim() && e.originalTitle.trim()!==e.title?`<p class="original-title"${jaLang(e.originalTitle)}>${escapeHTML(e.originalTitle)}</p>`:''}<p class="detail-creator"${jaLang(e.creator)}>${escapeHTML(e.creator||'Creator unrecorded')}</p><div class="detail-tags">${e.tags.map(t=>`<span>${escapeHTML(t)}</span>`).join('')}</div><dl class="detail-facts">${facts.map(([k,v])=>`<div><dt>${escapeHTML(k)}</dt><dd>${escapeHTML(v)}</dd></div>`).join('')}</dl><div class="source-links">${links.map(([k,u])=>`<a href="${escapeHTML(safeURL(u))}" target="_blank" rel="noopener noreferrer">${k==='リンク'?'Listen online':escapeHTML(k)} ↗</a>`).join('')}</div></div></div>${`<section class="member-reviews"><h3 class="member-reviews-heading">MEMBER REVIEWS</h3>${reviews.map(memberReviewMarkup).join('')}</section>`}<p class="detail-disclaimer"><a href="${escapeHTML(safeURL(e.url))}" target="_blank" rel="noopener noreferrer">Open the log sheet</a>${scoreContext}</p>`;
+}
+function showEntry(id,button=null){
+ if(detailDialog.open)return;
+ const e=entries.find(item=>item.id===id);if(!e)return;
+ renderDetail(e);
  const reveal=()=>openArchiveDialog(detailDialog,button);
  if(floatingEdition&&typeof detailArtworkTransition!=='undefined')detailArtworkTransition.open(detailDialog,button,reveal);
  else reveal();
+}
+// Scrolling past the open detail's top or bottom edge steps through the
+// collection in the order currently on screen: one work back or forward.
+function detailNavList(){
+ const q=search.value.trim().normalize('NFKC').toLocaleLowerCase('ja');
+ const seen=new Set(),list=[];
+ for(const e of displayEntries){
+  if(!matchesCollectionFilter(e)||!matchesRating(e)||(activeMember!=='all'&&e.member!==activeMember))continue;
+  if(![e.title,e.pageTitle,e.originalTitle,e.creator,e.category,e.label,e.note,e.member,...e.tags].join(' ').normalize('NFKC').toLocaleLowerCase('ja').includes(q))continue;
+  const key=workKey(e);if(seen.has(key))continue;seen.add(key);list.push(e);
+ }
+ return list;
+}
+function stepDetail(dir){
+ if(!detailDialog.open||!currentDetailId)return;
+ const list=detailNavList(),index=list.findIndex(e=>e.id===currentDetailId);
+ if(index<0)return;
+ const next=list[index+dir];if(!next)return;
+ renderDetail(next);detailDialog.scrollTop=0;
+ const content=document.querySelector('#detail-content');
+ content.classList.remove('step-in');void content.offsetWidth;content.classList.add('step-in');
+}
+if(detailDialog){
+ let lastWheelAt=0,wheelArmed=false,stepLockUntil=0;
+ detailDialog.addEventListener('wheel',event=>{
+  const now=Date.now(),dir=event.deltaY>0?1:event.deltaY<0?-1:0;
+  if(!dir)return;
+  const atEdge=dir>0?detailDialog.scrollTop+detailDialog.clientHeight>=detailDialog.scrollHeight-1:detailDialog.scrollTop<=0;
+  if(!atEdge){wheelArmed=false;lastWheelAt=now;return;}
+  if(now<stepLockUntil){event.preventDefault();lastWheelAt=now;return;}
+  if(now-lastWheelAt>200&&wheelArmed){event.preventDefault();stepDetail(dir);wheelArmed=false;stepLockUntil=now+700;}
+  else wheelArmed=true;
+  lastWheelAt=now;
+ },{passive:false});
+ let touchY=null,touchTop=false,touchBottom=false;
+ detailDialog.addEventListener('touchstart',event=>{
+  if(event.touches.length!==1){touchY=null;return;}
+  touchY=event.touches[0].clientY;touchTop=detailDialog.scrollTop<=0;touchBottom=detailDialog.scrollTop+detailDialog.clientHeight>=detailDialog.scrollHeight-1;
+ },{passive:true});
+ detailDialog.addEventListener('touchend',event=>{
+  if(touchY===null)return;
+  const dy=touchY-event.changedTouches[0].clientY;touchY=null;
+  if(dy<=-70&&touchTop)stepDetail(-1);
+  else if(dy>=70&&touchBottom)stepDetail(1);
+ });
 }
 function renderFavorites(){
  if(!document.querySelector('.favorite-grid'))return;
