@@ -130,7 +130,7 @@ function archiveDOM(entryData){
  add(document,'scope-help');
  const sort=add(document,'sort-order');
  for(const value of ['shuffle','newest']){
-  const button=add(sort,'',{dataset:{sort:value}});button.tagName='BUTTON';
+  const button=add(sort,'',{dataset:{sort:value}});button.tagName='SPAN';
  }
  add(document,'',{className:'filters'});
  const ratings=add(document,'rating-filters');
