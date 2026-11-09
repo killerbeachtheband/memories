@@ -1,4 +1,4 @@
-// The collection is a native scroll window at every width, with a soft four-work resting stop.
+// The collection is a native scroll window at every width, with a soft six-work resting stop on phones and four works on larger screens.
 (()=>{
  'use strict';
  const collection=document.querySelector('#collection'),root=document.documentElement,grid=document.querySelector('#collection-grid'),viewport=document.querySelector('#collection-viewport');
@@ -19,9 +19,9 @@
  function groups(){
   const cards=[...grid.children].filter(card=>card.classList.contains('object-card')),offset=layoutTop(viewport),result=[];
   // Every two-column layout can place either visible row at the top; four columns keep full-row stops.
-  const step=wide.matches?4:2,limit=!wide.matches&&cards.length>0?Math.max(1,cards.length-2):cards.length;
+  const step=wide.matches?4:2,page=wide.matches?4:phone.matches?6:4,limit=!wide.matches&&cards.length>0?Math.max(1,cards.length-2):cards.length;
   for(let i=0;i<limit;i+=step){
-   const items=cards.slice(i,i+4),top=layoutTop(items[0])-offset,end=Math.max(...items.map(card=>layoutTop(card)-offset+card.offsetHeight));
+   const items=cards.slice(i,i+page),top=layoutTop(items[0])-offset,end=Math.max(...items.map(card=>layoutTop(card)-offset+card.offsetHeight));
    result.push({top,end,count:items.length,start:i});
   }
   return result;
@@ -37,16 +37,15 @@
   if(!enabled()){
    layoutStops=[];layoutStarts=[];grid.style.removeProperty('--collection-tail-space');viewport.style.removeProperty('--collection-row-height');viewport.style.removeProperty('--collection-cover-limit');return;
   }
-  // Four columns on a wide screen, two staggered rows on smaller screens.
+  // Four columns on a wide screen; three staggered rows on phones, two on other small screens.
   setLayout(root,'--collection-page-height',Math.min(innerHeight,window.visualViewport?.height||innerHeight));
-  const rows=wide.matches?1:2,rowHeight=Math.max(48,(viewport.clientHeight-32-20*(rows-1))/rows);
+  const rows=wide.matches?1:phone.matches?3:2,rowHeight=Math.max(48,(viewport.clientHeight-32-20*(rows-1))/rows);
   setLayout(viewport,'--collection-row-height',rowHeight);
   // The scroll window reaches the screen edge; resting artwork still clears the floating nav.
   const nav=document.querySelector('.central-nav'),safeBottom=parseFloat(getComputedStyle(grid).getPropertyValue('--collection-safe-bottom'))||0;
-  const contentReserve=Math.max(0,...[...grid.children].map(card=>{const cover=card.querySelector('.cover');return cover?card.offsetHeight-cover.offsetHeight:0;}));
   const navReserve=(phone.matches?38:42)+(nav?.offsetHeight||60)/2+safeBottom+8;
   const precedingRows=(rows-1)*(rowHeight+20),motionAllowance=phone.matches?16:24;
-  setLayout(viewport,'--collection-cover-limit',Math.max(48,viewport.clientHeight-precedingRows-16-navReserve-contentReserve-motionAllowance));
+  setLayout(viewport,'--collection-cover-limit',Math.max(48,viewport.clientHeight-precedingRows-16-navReserve-motionAllowance));
   const pageStart=collection?layoutTop(collection):null;
   if(preservePage&&pageStart!==null&&Math.abs(scrollY-pageStart)>1)scrollTo({top:pageStart,behavior:'instant'});
   previousPageStart=pageStart;
