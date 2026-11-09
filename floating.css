@@ -278,14 +278,14 @@ html.section-sliding,html.collection-settling{scroll-behavior:auto!important}
 .artwork-flight-hidden{visibility:hidden!important}
 .detail-artwork-flight{position:fixed;left:0;top:0;z-index:5;max-width:none;max-height:none;object-fit:fill;transform-origin:center;pointer-events:none;will-change:transform;margin:0;border:0;border-radius:0}
 
-/* Local phone preview: four complete works in a compact two-by-two passage. */
+/* Local phone preview: six complete works in a compact three-by-two passage. */
 @media(max-width:540px){
  .collection{padding:16px 16px 92px}
  .collection-heading{padding-bottom:clamp(12px,calc(28svh - 175px),64px)}
  .collection-heading h2{font-size:18px}
  .collection-grid:not(.index-mode){--collection-cover-height:clamp(96px,17svh,156px);--collection-safe-bottom:env(safe-area-inset-bottom,0px);gap:20px 24px;padding:8px 0 var(--collection-tail-space,24px)}
  .collection-grid:not(.index-mode) .object-card:nth-child(n){padding-top:0}
- .collection-grid:not(.index-mode) .object-card:nth-child(even){padding-top:32px}
+ .collection-grid:not(.index-mode) .object-card:nth-child(even){padding-top:12px}
  .collection-grid:not(.index-mode) .object-index{font-size:10px;line-height:1.4;margin-bottom:7px}
  .collection-grid:not(.index-mode) .cover{height:var(--collection-cover-height)}
  .collection-grid:not(.index-mode) .object-caption{margin-top:22px;gap:5px 6px;align-items:center}
@@ -297,13 +297,15 @@ html.section-sliding,html.collection-settling{scroll-behavior:auto!important}
 /* A native scrolling window: artworks leave through its edges, never by hiding cards. */
 .collection-viewport{display:contents}
 @media(max-width:540px){
- .collection-windowed .collection{height:var(--collection-page-height,100svh);padding:16px 16px 0;display:flex;flex-direction:column;overflow:clip}
+ .collection-windowed .collection{height:var(--collection-page-height,100svh);padding:16px 16px 80px;display:flex;flex-direction:column;overflow:clip}
  .collection-windowed .collection-heading{flex:none;padding-bottom:20px}
  .collection-windowed .collection-viewport{display:block;position:relative;min-height:0;flex:1;margin-inline:-16px;padding-inline:16px;overflow:auto;overflow-x:hidden;overflow-anchor:none;scrollbar-width:none;-webkit-overflow-scrolling:touch}
  .collection-windowed .collection-viewport::-webkit-scrollbar{display:none}
  .collection-windowed .collection-viewport:focus-visible{outline:1px solid var(--ink);outline-offset:4px}
  .collection-windowed .collection-grid{grid-auto-rows:minmax(var(--collection-row-height,220px),auto);padding:16px 0 var(--collection-tail-space,16px);row-gap:20px}
- .collection-windowed .collection-grid .cover{height:min(var(--collection-cover-height),var(--collection-cover-limit,156px),max(48px,calc(var(--collection-row-height,220px) - 140px)))}
+ .collection-windowed .collection-grid .cover{height:min(var(--collection-cover-height),var(--collection-cover-limit,156px),max(48px,calc(var(--collection-row-height,220px) - 87px)))}
+ .collection-windowed .collection-grid .object-caption{margin-top:12px}
+ .collection-windowed .collection-grid .object-title{min-height:1.35em;-webkit-line-clamp:1}
  .collection-windowed .collection-grid .object-card{opacity:1;transition:none}
  .collection-windowed.auto-load-ready .load-more-wrap{height:0;min-height:0;margin:0;overflow:hidden}
 }
