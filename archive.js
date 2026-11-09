@@ -122,8 +122,8 @@ function omitEmptySections(markdown){
 }
 // Escape source content before rendering. Notion HTML is never executed.
 function renderMarkdown(markdown){
- let html='',paragraph=[],list=null;
- const flush=()=>{if(paragraph.length){html+=`<p>${paragraph.map(inlineMarkdown).join('<br>')}</p>`;paragraph=[];}};
+ let html='',paragraph=[],list=null,section='';
+ const flush=()=>{if(paragraph.length){html+=`<p${section==='synopsis'?' class="synopsis-text"':''}>${paragraph.map(inlineMarkdown).join('<br>')}</p>`;paragraph=[];}};
  const closeList=()=>{if(list){html+=`</${list}>`;list=null;}};
  const lines=omitEmptySections(markdown).split('\n');
  for(let i=0;i<lines.length;i++){
@@ -139,7 +139,7 @@ function renderMarkdown(markdown){
   }
   if(!line.trim()){flush();closeList();continue;}
   const h=line.match(/^(#{1,6})\s+(.+)$/);
-  if(h){flush();closeList();const n=h[1].length<=2?3:4;html+=`<h${n}>${inlineMarkdown(h[2])}</h${n}>`;continue;}
+  if(h){flush();closeList();section=h[2].trim()==='概要'?'synopsis':'';const n=h[1].length<=2?3:4;html+=`<h${n}${section==='synopsis'?' class="synopsis-heading"':''}>${inlineMarkdown(h[2])}</h${n}>`;continue;}
   if(/^---+$/.test(line.trim())){flush();closeList();html+='<hr>';continue;}
   const item=line.match(/^\s*(?:([-*])\s+|\d+\.\s+)(.*)$/);
   if(item){flush();const kind=item[1]?'ul':'ol';if(list!==kind){closeList();html+=`<${kind}>`;list=kind;}html+=`<li>${inlineMarkdown(item[2])}</li>`;continue;}
