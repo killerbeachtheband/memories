@@ -27,6 +27,10 @@
   return result;
  }
  function groupStop(group){return Math.max(0,group.top-16);}
+ // A page of works is built to fill the window, so tolerate real card heights
+ // (stagger, captions, rounding) running past the nominal window height;
+ // only a group a full row taller than the window is not a resting stop.
+ const fitsWindow=group=>group.end-group.top<=viewport.clientHeight+16;
  function setLayout(element,name,value){const text=`${value}px`;if(element.style.getPropertyValue(name)!==text)element.style.setProperty(name,text);}
  function syncLayout(){
   layoutFrame=0;
@@ -55,7 +59,7 @@
   const withoutTail=viewport.scrollHeight-padding;
   // Allow the final one, two or three records to align without inserting any internal gaps.
   setLayout(grid,'--collection-tail-space',Math.max(16,Math.ceil(groupStop(last)+viewport.clientHeight-withoutTail)));
-  const stopGroups=groups().filter(group=>group.end-group.top<=viewport.clientHeight-24);
+  const stopGroups=groups().filter(fitsWindow);
   layoutStops=stopGroups.map(groupStop);layoutStarts=stopGroups.map(group=>group.start);
   // Keep the same works in view when the column count or viewport height changes.
   const restore=stopGroups.reduce((chosen,group,index)=>group.start<=restingStart?index:chosen,0);
@@ -66,7 +70,7 @@
  function queueLayout(){if(!layoutFrame)layoutFrame=requestAnimationFrame(syncLayout);}
  function anchors(){
   const maximum=Math.max(0,viewport.scrollHeight-viewport.clientHeight);
-  return groups().filter(group=>group.end-group.top<=viewport.clientHeight-24).map(group=>Math.min(maximum,groupStop(group)));
+  return groups().filter(fitsWindow).map(group=>Math.min(maximum,groupStop(group)));
  }
  function settle(){
   timer=0;if(!armed)return;
