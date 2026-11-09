@@ -26,12 +26,12 @@ function setup(options={}){
 test('uses a native phone window without masking or changing any artwork opacity',()=>{
  const t=setup();assert(t.root.classList.contains('collection-windowed'));assert(!/rest-occluded|collection-at-rest|opacity/.test(source));
 });
-test('waits for momentum, aligns four locally, and never scrolls the outer page',()=>{
+test('waits for momentum, aligns six locally, and never scrolls the outer page',()=>{
  const t=setup();t.scroll(620);t.advance(128);assert.equal(t.viewport.scrollTop,620);
- t.scroll(640);t.advance(650);assert.equal(t.viewport.scrollTop,548);assert.equal(t.context.scrollY,700);
+ t.scroll(640);t.advance(650);assert.equal(t.viewport.scrollTop,730.6666666666665);assert.equal(t.context.scrollY,700);
 });
-test('a long gesture can cross multiple four-work stops',()=>{
- const t=setup();t.scroll(1800);t.advance(650);assert.equal(t.viewport.scrollTop,1918);
+test('a long gesture can cross multiple six-work stops',()=>{
+ const t=setup();t.scroll(1800);t.advance(650);assert.equal(t.viewport.scrollTop,1826.6666666666665);
 });
 test('slow touch scrolling stays native until the finger lifts',()=>{
  const t=setup();t.touch('touchstart');
@@ -39,7 +39,7 @@ test('slow touch scrolling stays native until the finger lifts',()=>{
  t.touch('touchend');t.advance(650);assert.equal(t.viewport.scrollTop,548);
 });
 test('new contact interrupts an active correction without restarting it',()=>{
- const t=setup();t.scroll(640);t.advance(432);assert(t.viewport.scrollTop<640);
+ const t=setup();t.scroll(600);t.advance(432);assert(t.viewport.scrollTop<600);
  t.touch('touchstart');const y=t.viewport.scrollTop;t.advance(650);assert.equal(t.viewport.scrollTop,y);
  t.touch('touchend');t.advance(650);assert.equal(t.viewport.scrollTop,y);
 });
@@ -52,20 +52,20 @@ test('reduced motion, pinch zoom, editing and oversized text are not snapped',()
 });
 test('native scrollend prevents a premature snap between slow wheel events',()=>{
  const t=setup({nativeEnd:true});t.scroll(640);t.advance(1200);assert.equal(t.viewport.scrollTop,640);
- t.event('scrollend');t.advance(650);assert.equal(t.viewport.scrollTop,548);
+ t.event('scrollend');t.advance(650);assert.equal(t.viewport.scrollTop,730.6666666666665);
 });
 test('opening a dialog cancels pending correction',()=>{
  const t=setup();t.scroll(640);t.setDialog(true);t.advance(650);assert.equal(t.viewport.scrollTop,640);
 });
 test('browser toolbar resize preserves the same resting passage',()=>{
- const t=setup();t.scroll(640);t.advance(650);t.resize(600);t.advance(100);assert.equal(t.viewport.scrollTop,588);
+ const t=setup();t.scroll(640);t.advance(650);t.resize(600);t.advance(100);assert.equal(t.viewport.scrollTop,784);
 });
 test('partial final groups can reach the top of the window',()=>{
- const t=setup({cards:5,y:0});assert(t.viewport.scrollHeight-t.viewport.clientHeight>=274);
- t.scroll(530);t.advance(650);assert.equal(t.viewport.scrollTop,274);
+ const t=setup({cards:5,y:0});assert(t.viewport.scrollHeight-t.viewport.clientHeight>=182);
+ t.scroll(530);t.advance(650);assert.equal(t.viewport.scrollTop,182.66666666666663);
 });
 test('newly appended artworks retain equal row spacing',()=>{
- const t=setup({cards:12});t.setCards(24);t.scroll(1800);t.advance(650);assert.equal(t.viewport.scrollTop,1918);
+ const t=setup({cards:12});t.setCards(24);t.scroll(1800);t.advance(650);assert.equal(t.viewport.scrollTop,1826.6666666666665);
 });
 test('turning reduced motion on immediately cancels a correction',()=>{
  const t=setup();t.scroll(640);t.advance(432);t.setReduced(true);const y=t.viewport.scrollTop;t.advance(650);assert.equal(t.viewport.scrollTop,y);
@@ -75,8 +75,8 @@ test('resting covers reserve clearance above the floating nav even with a full-h
  const t=setup();
  const coverLimit=parseFloat(t.viewport.style.getPropertyValue('--collection-cover-limit'));
  const rowHeight=parseFloat(t.viewport.style.getPropertyValue('--collection-row-height'));
- const metadata=74,diagonal=16,navTop=560-68;
- assert.equal(16+rowHeight+20+coverLimit+metadata+diagonal,navTop-8);
+ const diagonal=16,navTop=560-68;
+ assert.equal(16+2*(rowHeight+20)+coverLimit+diagonal,navTop-8);
 });
 
 test('desktop uses four columns and snaps one full row at a time',()=>{
@@ -92,12 +92,12 @@ test('resizing a browser keeps the collection at the top of the screen',()=>{
  const t=setup();t.collection.offsetTop=780;t.resize(600);t.advance(80);assert.equal(t.context.scrollY,780);
 });
 
-test('phones can rest with the old lower row at the top: works 3 through 6',()=>{
- const t=setup({y:0});t.scroll(340);t.advance(650);assert.equal(t.viewport.scrollTop,274);
+test('phones can rest with a lower row at the top: works 5 through 10',()=>{
+ const t=setup({y:0});t.scroll(340);t.advance(650);assert.equal(t.viewport.scrollTop,365.33333333333326);
 });
-test('a final full passage retains four works rather than exposing an unnecessary half-empty stop',()=>{
+test('a final full passage retains a full passage rather than exposing an unnecessary half-empty stop',()=>{
  for(const phone of [true,false]){
-  const t=setup({phone,cards:6,y:0});t.scroll(800);t.advance(650);assert.equal(t.viewport.scrollTop,274);
+  const t=setup({phone,cards:6,y:0});t.scroll(800);t.advance(650);assert.equal(t.viewport.scrollTop,phone?182.66666666666663:274);
   const f=setup({phone,cards:4,y:0});f.scroll(200);f.advance(650);assert.equal(f.viewport.scrollTop,0);
  }
 });
@@ -106,7 +106,7 @@ test('four-column desktop windows retain full-row stops',()=>{
 });
 test('switching to phone width keeps the same first artwork at a resting stop',()=>{
  const t=setup({phone:false});t.scroll(640);t.advance(650);assert.equal(t.viewport.scrollTop,548);
- t.setPhone(true);t.advance(80);assert.equal(t.viewport.scrollTop,548);
+ t.setPhone(true);t.advance(80);assert.equal(t.viewport.scrollTop,365.33333333333326);
 });
 
 test('an empty filtered collection has no snapping destinations',()=>{
