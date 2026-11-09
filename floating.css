@@ -65,6 +65,8 @@ button:disabled{cursor:default;opacity:.5;scale:1}
 #collection-title:focus{outline:none}
 #menu-dialog{max-height:calc(100dvh - 32px);overscroll-behavior:contain}
 #detail-dialog,#about-dialog{overscroll-behavior:contain;scroll-behavior:auto}
+#detail-content.step-in{animation:detail-step-in .18s ease-out}
+@keyframes detail-step-in{from{opacity:.3;transform:translateY(8px)}to{opacity:1;transform:none}}
 dialog[open]{animation:panel-open .22s cubic-bezier(.2,.75,.2,1) both}
 dialog[open]::backdrop{animation:panel-backdrop .18s ease both}
 dialog[open].is-closing{animation:panel-close .16s ease both;pointer-events:none}
@@ -380,10 +382,10 @@ html.section-sliding,html.collection-settling{scroll-behavior:auto!important}
 .member-review-body .synopsis-heading{font-weight:700;border-top:1px solid var(--plate);padding-top:22px;margin-top:26px}
 .category-filters .filter{background:transparent;border:1.5px solid var(--ink)}
 .category-filters .filter.active{background:var(--ink)}
-.sort-order-row{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:var(--white);border-radius:9999px;padding:8px 12px;font-size:12px;line-height:1;margin-left:auto}
-.sort-order-row button{background:none;color:inherit;font:inherit;padding:2px 0;opacity:.55}
-.sort-order-row button.active{opacity:1}
-.sort-order-row span{opacity:.55}
+.sort-order-row{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:var(--white);border-radius:9999px;padding:10px 14px;font-size:12px;line-height:1;margin-left:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sort-order-row [data-sort]{opacity:.55}
+.sort-order-row [data-sort].active{opacity:1}
+.sort-order-row .sort-sep{opacity:.55}
 
 .member-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px}
 .rating-row{margin:2px 0 14px}
