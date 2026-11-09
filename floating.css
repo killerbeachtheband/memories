@@ -120,9 +120,11 @@ footer{padding-bottom:110px}
 }
 @media(prefers-reduced-motion:reduce){.stage-object,.menu-dialog[open],.menu-dialog[open]>*{animation:none!important}.field-tooltip{transition:none}.drag-hint{display:none}}
 /* Missing artwork stays a tangible, rectangular object. */
-.cover.cover-typographic{height:auto;aspect-ratio:1;background:var(--chalk);padding:24px;align-items:center;justify-content:flex-start;border-radius:0}
-.cover-typographic .real-cover-title{position:relative;font-size:22px;line-height:1.4;text-align:left}
-.detail-visual .cover.cover-typographic{height:auto;aspect-ratio:1;background:var(--plate)}
+.cover.cover-typographic{height:auto;aspect-ratio:1;background:var(--chalk);padding:24px;flex-direction:column;align-items:flex-start;justify-content:center;gap:12px;border-radius:0}
+.cover-typographic .real-cover-title{position:relative;font-size:22px;line-height:1.35;text-align:left;text-wrap:balance;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.detail-visual .cover.cover-typographic{height:auto;aspect-ratio:1;background:var(--plate);justify-content:space-between}
+.detail-visual .cover-typographic .cover-index,.detail-visual .cover-typographic .cover-year{display:block;font-size:11px;letter-spacing:.1em;opacity:.55}
+.detail-visual .cover-typographic .real-cover-title{font-size:28px;display:block}
 .entry-body a{display:inline-block;max-width:100%;vertical-align:middle;line-height:1.5;padding:6px 12px;overflow-wrap:anywhere}
 .entry-body li{margin:8px 0;padding-left:3px}
 .stage-foot{display:flex;justify-content:flex-end}
@@ -155,7 +157,7 @@ html.section-sliding,html.collection-settling{scroll-behavior:auto!important}
 .central-nav[data-design="outline"]{background:none;border:0;padding:0;gap:24px}.central-nav[data-design="outline"] .menu-trigger{background:transparent;border:1px solid var(--ink);gap:12px}
 @media(max-width:540px){.nav-design-dialog{padding:20px}.design-choice{flex-direction:column;align-items:flex-start;padding:16px;gap:14px}.nav-sample{align-self:center;font-size:14px}.sample-graphite{gap:16px}.sample-outline{gap:20px}}
 @media(max-width:540px){.stage-object.is-text .object-face{padding:16px}.stage-title{font-size:16px}.object-9{display:block;--x:-15%;--y:36%;--w:33%;--r:-10deg}.object-10{display:block;--x:78%;--y:3%;--w:34%;--r:12deg}}
-@media(max-width:540px){.cover.cover-typographic{padding:18px}.cover-typographic .real-cover-title{font-size:18px}.detail-visual .cover.cover-typographic{max-width:280px;margin-inline:auto}}
+@media(max-width:540px){.cover.cover-typographic{padding:10px}.cover-typographic .real-cover-title{font-size:13px}.detail-visual .cover.cover-typographic{max-width:280px;margin-inline:auto;padding:20px}.detail-visual .cover-typographic .real-cover-title{font-size:22px}}
 /* Materials belong to the floating exhibition, not the reading view. */
 .stage-object.is-disc .object-face{display:block;padding:0;aspect-ratio:1;border-radius:50%;overflow:hidden;background:repeating-radial-gradient(circle,#181818 0 2px,#333 2.5px,#171717 3px 5px);mask-image:radial-gradient(circle,transparent 0 3.5%,#000 4%);-webkit-mask-image:radial-gradient(circle,transparent 0 3.5%,#000 4%);animation:vinyl-turn 80s linear infinite;animation-play-state:paused}
 .stage-object.is-disc img{position:absolute;inset:11%;width:78%;height:78%;max-height:none;object-fit:cover;border-radius:50%}
@@ -370,6 +372,10 @@ html.section-sliding,html.collection-settling{scroll-behavior:auto!important}
 .member-review-name{font-size:14px;font-weight:600}
 .member-review-rating{font-size:14px}
 .member-review-body p{font-size:14px;line-height:1.85;margin:12px 0;overflow-wrap:anywhere}
+.member-review-body .synopsis-heading{font-weight:700;border-top:1px solid var(--plate);padding-top:22px;margin-top:26px}
+.sort-order-row{margin:0 0 22px}
+.category-filters .filter,.sort-order-row .filter{background:transparent;border:1.5px solid var(--ink)}
+.category-filters .filter.active,.sort-order-row .filter.active{background:var(--ink)}
 
 .member-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px}
 .rating-row{margin:2px 0 14px}
