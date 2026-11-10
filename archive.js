@@ -298,8 +298,8 @@ function showEntry(id,button=null){
  if(floatingEdition&&typeof detailArtworkTransition!=='undefined')detailArtworkTransition.open(detailDialog,button,reveal);
  else reveal();
 }
-// Scrolling past the open detail's top or bottom edge steps through the
-// collection in the order currently on screen: one work back or forward.
+// A horizontal swipe steps through the collection in the order currently
+// on screen: the open detail slides out and the next one slides in.
 function detailNavList(){
  const q=search.value.trim().normalize('NFKC').toLocaleLowerCase('ja');
  const seen=new Set(),list=[];
@@ -310,37 +310,38 @@ function detailNavList(){
  }
  return list;
 }
+let detailStepping=false;
 function stepDetail(dir){
- if(!detailDialog.open||!currentDetailId)return;
+ if(!detailDialog.open||!currentDetailId||detailStepping)return;
  const list=detailNavList(),index=list.findIndex(e=>e.id===currentDetailId);
  if(index<0)return;
  const next=list[index+dir];if(!next)return;
- renderDetail(next);detailDialog.scrollTop=0;
  const content=document.querySelector('#detail-content');
- content.classList.remove('step-in');void content.offsetWidth;content.classList.add('step-in');
+ const swap=()=>{
+  renderDetail(next);detailDialog.scrollTop=0;
+  content.animate?.([{transform:`translateX(${dir*36}px)`,opacity:0},{transform:'translateX(0px)',opacity:1}],{duration:210,easing:'cubic-bezier(.22,.9,.3,1)'});
+ };
+ if(content.animate){
+  detailStepping=true;
+  const out=content.animate([{transform:'translateX(0px)',opacity:1},{transform:`translateX(${-dir*36}px)`,opacity:0}],{duration:130,easing:'ease-in'});
+  const done=()=>{if(!detailStepping)return;detailStepping=false;swap();};
+  out.onfinish=done;out.oncancel=done;
+ }else swap();
 }
 if(detailDialog){
- let lastWheelAt=0,wheelArmed=false,stepLockUntil=0;
- detailDialog.addEventListener('wheel',event=>{
-  const now=Date.now(),dir=event.deltaY>0?1:event.deltaY<0?-1:0;
-  if(!dir)return;
-  const atEdge=dir>0?detailDialog.scrollTop+detailDialog.clientHeight>=detailDialog.scrollHeight-1:detailDialog.scrollTop<=0;
-  if(!atEdge){wheelArmed=false;lastWheelAt=now;return;}
-  if(now<stepLockUntil){event.preventDefault();lastWheelAt=now;return;}
-  if(now-lastWheelAt>200&&wheelArmed){event.preventDefault();stepDetail(dir);wheelArmed=false;stepLockUntil=now+700;}
-  else wheelArmed=true;
-  lastWheelAt=now;
- },{passive:false});
- let touchY=null,touchTop=false,touchBottom=false;
+ let touchX=null,touchY=null;
  detailDialog.addEventListener('touchstart',event=>{
-  if(event.touches.length!==1){touchY=null;return;}
-  touchY=event.touches[0].clientY;touchTop=detailDialog.scrollTop<=0;touchBottom=detailDialog.scrollTop+detailDialog.clientHeight>=detailDialog.scrollHeight-1;
+  if(event.touches.length!==1){touchX=null;return;}
+  touchX=event.touches[0].clientX;touchY=event.touches[0].clientY;
  },{passive:true});
  detailDialog.addEventListener('touchend',event=>{
-  if(touchY===null)return;
-  const dy=touchY-event.changedTouches[0].clientY;touchY=null;
-  if(dy<=-70&&touchTop)stepDetail(-1);
-  else if(dy>=70&&touchBottom)stepDetail(1);
+  if(touchX===null)return;
+  const dx=event.changedTouches[0].clientX-touchX,dy=event.changedTouches[0].clientY-touchY;touchX=null;
+  if(Math.abs(dx)>=56&&Math.abs(dx)>=Math.abs(dy)*1.5)stepDetail(dx<0?1:-1);
+ });
+ detailDialog.addEventListener('keydown',event=>{
+  if(event.key==='ArrowRight')stepDetail(1);
+  else if(event.key==='ArrowLeft')stepDetail(-1);
  });
 }
 function renderFavorites(){
