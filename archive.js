@@ -399,7 +399,7 @@ document.querySelectorAll('dialog').forEach(dialog=>{
  dialog.querySelector('.dialog-close').addEventListener('click',()=>closeArchiveDialog(dialog));
  let backdropStart=false;
  const outside=event=>{const r=dialog.getBoundingClientRect();return event.target===dialog&&(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom);};
- dialog.addEventListener('pointerdown',event=>{backdropStart=outside(event);});
+ dialog.addEventListener('pointerdown',event=>{backdropStart=dialog!==detailDialog&&outside(event);});
  dialog.addEventListener('click',event=>{if(backdropStart&&outside(event))closeArchiveDialog(dialog);backdropStart=false;});
  dialog.addEventListener('cancel',event=>{if(floatingEdition){event.preventDefault();closeArchiveDialog(dialog);}});
  dialog.addEventListener('close',()=>{if(typeof detailArtworkTransition!=='undefined')detailArtworkTransition.cancel(dialog);if(!document.querySelector('dialog[open]'))document.body.style.overflow='';});
