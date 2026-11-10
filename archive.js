@@ -1,7 +1,7 @@
 'use strict';
 const collectionDate=e=>Object.prototype.hasOwnProperty.call(e,'sortDate')?(e.sortDate||''):(e.experiencedDate||e.releaseDate||'');
 const registeredEntries=ARCHIVE.entries.map(e=>({...e,pageTitle:e.title,title:e.category==='映画'?(e.originalTitle?.trim()||e.title):e.title}));
-const entries=[...registeredEntries].sort((a,b)=>collectionDate(b).slice(0,10).localeCompare(collectionDate(a).slice(0,10))),grid=document.querySelector('#collection-grid'),search=document.querySelector('#search'),filters=document.querySelector('.filters'),detailDialog=document.querySelector('#detail-dialog'),aboutDialog=document.querySelector('#about-dialog');
+const entries=[...registeredEntries].sort((a,b)=>collectionDate(b).slice(0,10).localeCompare(collectionDate(a).slice(0,10))),grid=document.querySelector('#collection-grid'),search=document.querySelector('#search'),filters=document.querySelector('#category-filters'),detailDialog=document.querySelector('#detail-dialog'),aboutDialog=document.querySelector('#about-dialog');
 // The grid opens in a fresh shuffle on every visit; Newest lists the latest registrations first.
 const shuffled=list=>{const a=[...list];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
 let sortMode='shuffle';
@@ -389,7 +389,6 @@ function onFilterClick(event){
  displayLimit=12;updateFilterButtons();updateRatingButtons();render();
 }
 filters.addEventListener('click',onFilterClick);
-document.querySelector('#category-filters')?.addEventListener('click',onFilterClick);
 search.addEventListener('input',()=>{displayLimit=12;render();});
 document.querySelector('#load-more').addEventListener('click',()=>loadNextRecords(true));
 document.addEventListener('click',event=>{const b=event.target.closest('[data-entry]');if(b)showEntry(b.dataset.entry,b);});
