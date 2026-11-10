@@ -1,11 +1,12 @@
-// The collection is a native scroll window at every width, with a soft six-work resting stop on phones and four works on larger screens.
+// The collection is a native scroll window at every width, with a soft six-work resting stop on phones and four works on larger screens. Once a fling decays, the snap brakes hard and locks onto the nearest stop within about half a second.
 (()=>{
  'use strict';
  const collection=document.querySelector('#collection'),root=document.documentElement,grid=document.querySelector('#collection-grid'),viewport=document.querySelector('#collection-viewport');
  if(!grid||!viewport)return;
  const phone=matchMedia('(max-width:540px)'),wide=matchMedia('(min-width:901px)'),reduced=matchMedia('(prefers-reduced-motion: reduce)');
- const nativeEnd='onscrollend' in viewport,quietTime=nativeEnd?80:300,duration=320;
+ const nativeEnd='onscrollend' in viewport,quietTime=nativeEnd?80:300;
  let timer=0,frame=0,layoutFrame=0,armed=false,touches=0,mouseDown=false,origin=null,lastScroll=-Infinity,lastWritten=null,scrollComplete=false,layoutStops=[],layoutStarts=[],previousPageStart=null;
+ let watchFrame=0,watchStart=0,watchTop=0,watchSlow=0;
  const enabled=()=>!grid.classList.contains('index-mode');
  const allowed=()=>enabled()&&!reduced.matches&&!document.hidden&&!document.querySelector('dialog[open]')
   &&!root.classList.contains('section-sliding')&&(!window.visualViewport||Math.abs(window.visualViewport.scale-1)<.02);
@@ -13,8 +14,9 @@
  function layoutTop(element){let top=0;for(let node=element;node;node=node.offsetParent)top+=node.offsetTop;return top;}
  function stop(disarm=true){
   clearTimeout(timer);timer=0;if(frame)cancelAnimationFrame(frame);
-  frame=0;root.classList.remove('collection-settling');if(disarm)armed=false;
+  frame=0;cancelWatch();root.classList.remove('collection-settling');if(disarm)armed=false;
  }
+ function cancelWatch(){if(watchFrame)cancelAnimationFrame(watchFrame);watchFrame=0;watchSlow=0;}
  function queue(){clearTimeout(timer);if(armed&&(!nativeEnd||scrollComplete))timer=setTimeout(settle,quietTime);}
  function groups(){
   const cards=[...grid.children].filter(card=>card.classList.contains('object-card')),offset=layoutTop(viewport),result=[];
@@ -72,22 +74,40 @@
   const maximum=Math.max(0,viewport.scrollHeight-viewport.clientHeight);
   return groups().filter(fitsWindow).map(group=>Math.min(maximum,groupStop(group)));
  }
- function settle(){
+ function settle(force=false){
   timer=0;if(!armed)return;
   if(!allowed()){stop();return;}
   if(touches||mouseDown)return;
-  if(performance.now()-lastScroll<quietTime-1){queue();return;}
+  if(!force&&performance.now()-lastScroll<quietTime-1){queue();return;}
+  cancelWatch();
   const positions=anchors();if(!positions.length){stop();return;}
   const from=viewport.scrollTop,to=positions.reduce((nearest,value)=>Math.abs(value-from)<Math.abs(nearest-from)?value:nearest);
   armed=false;if(Math.abs(to-from)<3)return;
-  const began=performance.now();root.classList.add('collection-settling');
+  // Brake hard: a short ease-out that starts at full speed and locks in.
+  const began=performance.now(),run=Math.min(260,Math.max(140,Math.abs(to-from)*.5));
+  root.classList.add('collection-settling');
   function step(now){
    if(!allowed()){stop();return;}
-   const progress=Math.min(1,(now-began)/duration),ease=progress<.5?4*progress**3:1-(-2*progress+2)**3/2;
+   const progress=Math.min(1,(now-began)/run),ease=1-(1-progress)**3;
    lastWritten=from+(to-from)*ease;viewport.scrollTo({top:lastWritten,behavior:'instant'});
    if(progress<1)frame=requestAnimationFrame(step);else{frame=0;root.classList.remove('collection-settling');}
   }
   frame=requestAnimationFrame(step);
+ }
+ // After the finger lifts, watch the native fling decay; once it crawls,
+ // take over and brake to the nearest stop instead of riding the long tail.
+ function watchStop(){
+  cancelWatch();if(!armed||touches||mouseDown)return;
+  watchStart=performance.now();watchTop=viewport.scrollTop;
+  const sample=now=>{
+   watchFrame=0;
+   if(!armed||touches||mouseDown)return;
+   const moved=Math.abs(viewport.scrollTop-watchTop);watchTop=viewport.scrollTop;
+   watchSlow=moved<=8?watchSlow+1:0;
+   if((watchSlow>=2&&now-watchStart>=90)||now-watchStart>=320){settle(true);return;}
+   watchFrame=requestAnimationFrame(sample);
+  };
+  watchFrame=requestAnimationFrame(sample);
  }
  viewport.addEventListener('scroll',()=>{
   if(lastWritten!==null&&Math.abs(viewport.scrollTop-lastWritten)<2)return;
@@ -108,7 +128,7 @@
   const point=event.touches[0],dx=point.clientX-origin.x,dy=point.clientY-origin.y;
   if(Math.abs(dy)>5&&Math.abs(dy)>Math.abs(dx))origin.vertical=true;
  },{passive:true});
- const release=event=>{touches=event.touches.length;if(!touches){origin=null;queue();}};
+ const release=event=>{touches=event.touches.length;if(!touches){origin=null;queue();watchStop();}};
  document.addEventListener('touchend',release,{passive:true});document.addEventListener('touchcancel',release,{passive:true});
  viewport.addEventListener('wheel',()=>stop(),{passive:true});
  viewport.addEventListener('pointerdown',event=>{if(event.pointerType==='mouse'){stop();mouseDown=true;}},{passive:true});
