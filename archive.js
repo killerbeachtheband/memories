@@ -288,6 +288,8 @@ function renderDetail(e){
  const checkedOn=reviewFacts.filter(([k])=>k==='SCORES CHECKED ON').map(([,v])=>v);
  facts.push(...reviewFacts.filter(([k])=>k!=='SCORES CHECKED ON'));
  const scoreContext=checkedOn.length?`<span class="score-context">Checked ${checkedOn.map(v=>escapeHTML(formatDate(v))).join(', ')}. Scores may change.</span>`:'';
+ const navList=detailNavList(),navIndex=navList.findIndex(item=>item.id===e.id);
+ detailDialog.querySelectorAll('[data-nav]').forEach(b=>{b.hidden=b.dataset.nav==='-1'?navIndex<=0:navIndex<0||navIndex>=navList.length-1;});
  document.querySelector('#detail-content').innerHTML=`<div class="detail-layout"><div class="detail-visual">${coverMarkup(e,true)}</div><div class="detail-body"><h2 id="detail-title" class="${isJapanese(e.title)?'jp':''}"${jaLang(e.title)}>${escapeHTML(e.title)}</h2>${e.originalTitle?.trim() && e.originalTitle.trim()!==e.title?`<p class="original-title"${jaLang(e.originalTitle)}>${escapeHTML(e.originalTitle)}</p>`:''}<p class="detail-creator"${jaLang(e.creator)}>${escapeHTML(e.creator||'Creator unrecorded')}</p><div class="detail-tags">${e.tags.map(t=>`<span>${escapeHTML(t)}</span>`).join('')}</div><dl class="detail-facts">${facts.map(([k,v])=>`<div><dt>${escapeHTML(k)}</dt><dd>${escapeHTML(v)}</dd></div>`).join('')}</dl><div class="source-links">${links.map(([k,u])=>`<a href="${escapeHTML(safeURL(u))}" target="_blank" rel="noopener noreferrer">${k==='リンク'?'Listen online':escapeHTML(k)} ↗</a>`).join('')}</div></div></div>${`<section class="member-reviews"><h3 class="member-reviews-heading">MEMBER REVIEWS</h3>${reviews.map(memberReviewMarkup).join('')}</section>`}<p class="detail-disclaimer"><a href="${escapeHTML(safeURL(e.url))}" target="_blank" rel="noopener noreferrer">Open the log sheet</a>${scoreContext}</p>`;
 }
 function showEntry(id,button=null){
@@ -342,6 +344,10 @@ if(detailDialog){
  detailDialog.addEventListener('keydown',event=>{
   if(event.key==='ArrowRight')stepDetail(1);
   else if(event.key==='ArrowLeft')stepDetail(-1);
+ });
+ detailDialog.addEventListener('click',event=>{
+  const button=event.target.closest('[data-nav]');
+  if(button)stepDetail(Number(button.dataset.nav));
  });
 }
 function renderFavorites(){
