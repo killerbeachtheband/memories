@@ -1,5 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync(require('node:path').join(__dirname,'../collection-snap.js'),'utf8');
+const css=fs.readFileSync(require('node:path').join(__dirname,'../floating.css'),'utf8');
 function setup(options={}){
  let time=0,id=0,dialog=false,rows=254;
  const timers=new Map(),frames=new Map(),listeners={},viewListeners={},observers=[];
@@ -12,7 +13,6 @@ function setup(options={}){
  const viewport={offsetTop:760,offsetParent:null,clientHeight:560,scrollTop:options.y??620,style:style(),addEventListener:(n,f)=>on(viewListeners,n,f),get scrollHeight(){return 16+Math.ceil(grid.children.length/2)*(rows+20)-20+(parseFloat(grid.style.getPropertyValue('--collection-tail-space'))||16);}};
  const event=(name,props={},where=viewListeners)=>{const e={target,touches:[],preventDefault(){throw Error('native scroll must not be intercepted');},...props};(where[name]||[]).forEach(f=>f(e));};
  viewport.scrollTo=({top})=>{viewport.scrollTop=top;event('scroll');};
- if(options.nativeEnd)viewport.onscrollend=null;
  function setCards(count){grid.children=Array.from({length:count},(_,i)=>({classList:{contains:v=>v==='object-card'},get offsetTop(){return 16+Math.floor(i/(options.wide?4:2))*(rows+20);},offsetParent:viewport,querySelector(){return {offsetHeight:180};},get offsetHeight(){return options.oversized?900:rows-(i%2?0:32);}}));}
  setCards(options.cards??24);
  const media=matches=>({matches,addEventListener(n,f){this.changed=f;}}),phone=media(options.phone!==false),wide=media(!!options.wide),reduced=media(!!options.reduced);
@@ -21,56 +21,31 @@ function setup(options={}){
  context.scrollTo=({top})=>{context.scrollY=top;};context.window=context;context.visualViewport={height:740,scale:options.zoom||1,addEventListener(){}};
  vm.runInNewContext(source,context);
  function advance(ms){const end=time+ms;while(time<end){time=Math.min(end,time+16);for(const [key,t]of [...timers])if(t.at<=time){timers.delete(key);t.f();}const jobs=[...frames.values()];frames.clear();jobs.forEach(f=>f(time));}}
- return {root,grid,collection,viewport,context,advance,event:(n,p)=>event(n,p),global:(n,p)=>event(n,p,listeners),scroll(y){viewport.scrollTop=y;event('scroll');},touch(n,y=300){event(n,{touches:n==='touchend'?[]:[{clientX:100,clientY:y}]},n==='touchend'?listeners:viewListeners);},setCards,setDialog(value){dialog=value;observers.forEach(f=>f());},resize(height){viewport.clientHeight=height;event('resize',{},listeners);},setReduced(value){reduced.matches=value;reduced.changed();},setPhone(value){phone.matches=value;phone.changed();}};
+ return {root,grid,collection,viewport,context,advance,event:(n,p)=>event(n,p),global:(n,p)=>event(n,p,listeners),scroll(y){viewport.scrollTop=y;event('scroll');},setCards,setDialog(value){dialog=value;observers.forEach(f=>f());},resize(height){viewport.clientHeight=height;event('resize',{},listeners);},setReduced(value){reduced.matches=value;reduced.changed();},setPhone(value){phone.matches=value;phone.changed();}};
 }
 test('uses a native phone window without masking or changing any artwork opacity',()=>{
  const t=setup();assert(t.root.classList.contains('collection-windowed'));assert(!/rest-occluded|collection-at-rest|opacity/.test(source));
 });
-test('waits for momentum, aligns six locally, and never scrolls the outer page',()=>{
- const t=setup();t.scroll(620);t.advance(128);assert.equal(t.viewport.scrollTop,620);
- t.scroll(640);t.advance(650);assert.equal(t.viewport.scrollTop,730.6666666666665);assert.equal(t.context.scrollY,700);
+test('stopping is the browser scroll snap, declared in CSS, not a script animation',()=>{
+ assert.match(css,/\.collection-windowed \.collection-viewport\{[^}]*scroll-snap-type:y mandatory/);
+ assert.match(css,/\.collection-windowed \.collection-grid \.object-card\{scroll-snap-align:start;translate:none!important\}/);
+ assert.match(css,/@media \(prefers-reduced-motion:reduce\)\{\.collection-windowed \.collection-viewport\{scroll-snap-type:none\}\}/);
+ assert(!/function settle|watchStop|addEventListener\('scroll'/.test(source));
 });
-test('a long gesture can cross multiple six-work stops',()=>{
- const t=setup();t.scroll(1800);t.advance(650);assert.equal(t.viewport.scrollTop,1826.6666666666665);
+test('the script never moves the collection after a scroll, at any width',()=>{
+ for(const opt of [{},{phone:false,wide:true},{phone:false}]){
+  const t=setup(opt);t.scroll(640);t.advance(1200);assert.equal(t.viewport.scrollTop,640);
+ }
 });
-test('slow touch scrolling stays native until the finger lifts',()=>{
- const t=setup();t.touch('touchstart');
- for(let i=1;i<=6;i++){t.touch('touchmove',300-i*6);t.scroll(620+i);t.advance(400);assert.equal(t.viewport.scrollTop,620+i);}
- t.touch('touchend');t.advance(650);assert.equal(t.viewport.scrollTop,548);
-});
-test('new contact interrupts an active correction without restarting it',()=>{
- const t=setup();t.scroll(600);t.advance(432);assert(t.viewport.scrollTop<600);
- t.touch('touchstart');const y=t.viewport.scrollTop;t.advance(650);assert.equal(t.viewport.scrollTop,y);
- t.touch('touchend');t.advance(650);assert.equal(t.viewport.scrollTop,y);
-});
-test('new native motion cancels a correction and wins',()=>{
- const t=setup();t.scroll(640);t.advance(432);t.scroll(1150);t.advance(200);assert.equal(t.viewport.scrollTop,1150);
- t.advance(650);assert.equal(t.viewport.scrollTop,1096);
-});
-test('reduced motion, pinch zoom, editing and oversized text are not snapped',()=>{
+test('the script leaves reduced-motion, zoomed, editing and oversized cases alone',()=>{
  for(const opt of [{reduced:true},{zoom:2},{editable:true},{oversized:true}]){const t=setup(opt);t.scroll(640);t.advance(650);assert.equal(t.viewport.scrollTop,640);}
 });
-test('native scrollend prevents a premature snap between slow wheel events',()=>{
- const t=setup({nativeEnd:true});t.scroll(640);t.advance(1200);assert.equal(t.viewport.scrollTop,640);
- t.event('scrollend');t.advance(650);assert.equal(t.viewport.scrollTop,730.6666666666665);
-});
-test('opening a dialog cancels pending correction',()=>{
- const t=setup();t.scroll(640);t.setDialog(true);t.advance(650);assert.equal(t.viewport.scrollTop,640);
-});
 test('browser toolbar resize preserves the same resting passage',()=>{
- const t=setup();t.scroll(640);t.advance(650);t.resize(600);t.advance(100);assert.equal(t.viewport.scrollTop,784);
+ const t=setup();t.scroll(730.6666666666665);t.resize(600);t.advance(100);assert.equal(t.viewport.scrollTop,784);
 });
 test('partial final groups can reach the top of the window',()=>{
  const t=setup({cards:5,y:0});assert(t.viewport.scrollHeight-t.viewport.clientHeight>=182);
- t.scroll(530);t.advance(650);assert.equal(t.viewport.scrollTop,182.66666666666663);
 });
-test('newly appended artworks retain equal row spacing',()=>{
- const t=setup({cards:12});t.setCards(24);t.scroll(1800);t.advance(650);assert.equal(t.viewport.scrollTop,1826.6666666666665);
-});
-test('turning reduced motion on immediately cancels a correction',()=>{
- const t=setup();t.scroll(640);t.advance(432);t.setReduced(true);const y=t.viewport.scrollTop;t.advance(650);assert.equal(t.viewport.scrollTop,y);
-});
-
 test('resting covers reserve clearance above the floating nav even with a full-height window',()=>{
  const t=setup();
  const coverLimit=parseFloat(t.viewport.style.getPropertyValue('--collection-cover-limit'));
@@ -78,37 +53,20 @@ test('resting covers reserve clearance above the floating nav even with a full-h
  const diagonal=16,navTop=560-68;
  assert.equal(16+2*(rowHeight+20)+coverLimit+diagonal,navTop-8);
 });
-
-test('desktop uses four columns and snaps one full row at a time',()=>{
+test('desktop uses four columns with one row per screen',()=>{
  const t=setup({phone:false,wide:true});assert(t.root.classList.contains('collection-windowed'));
  assert.equal(parseFloat(t.viewport.style.getPropertyValue('--collection-row-height')),528);
- t.scroll(640);t.advance(650);assert.equal(t.viewport.scrollTop,548);assert.equal(t.context.scrollY,700);
+ assert.equal(t.context.scrollY,700);
 });
-test('narrow desktop windows use two rows and stop after either row',()=>{
+test('narrow desktop windows use two rows per screen',()=>{
  const t=setup({phone:false});assert.equal(parseFloat(t.viewport.style.getPropertyValue('--collection-row-height')),254);
- t.scroll(340);t.advance(650);assert.equal(t.viewport.scrollTop,274);
 });
 test('resizing a browser keeps the collection at the top of the screen',()=>{
  const t=setup();t.collection.offsetTop=780;t.resize(600);t.advance(80);assert.equal(t.context.scrollY,780);
 });
-
-test('phones can rest with a lower row at the top: works 5 through 10',()=>{
- const t=setup({y:0});t.scroll(340);t.advance(650);assert.equal(t.viewport.scrollTop,365.33333333333326);
+test('switching to phone width keeps the same first artwork in view',()=>{
+ const t=setup({phone:false});t.scroll(548);t.setPhone(true);t.advance(80);assert.equal(t.viewport.scrollTop,365.33333333333326);
 });
-test('a final full passage retains a full passage rather than exposing an unnecessary half-empty stop',()=>{
- for(const phone of [true,false]){
-  const t=setup({phone,cards:6,y:0});t.scroll(800);t.advance(650);assert.equal(t.viewport.scrollTop,phone?182.66666666666663:274);
-  const f=setup({phone,cards:4,y:0});f.scroll(200);f.advance(650);assert.equal(f.viewport.scrollTop,0);
- }
-});
-test('four-column desktop windows retain full-row stops',()=>{
- const t=setup({phone:false,wide:true,y:0});t.scroll(340);t.advance(650);assert.equal(t.viewport.scrollTop,548);
-});
-test('switching to phone width keeps the same first artwork at a resting stop',()=>{
- const t=setup({phone:false});t.scroll(640);t.advance(650);assert.equal(t.viewport.scrollTop,548);
- t.setPhone(true);t.advance(80);assert.equal(t.viewport.scrollTop,365.33333333333326);
-});
-
-test('an empty filtered collection has no snapping destinations',()=>{
+test('an empty filtered collection stays where it is put',()=>{
  const t=setup({cards:0,y:0});t.scroll(30);t.advance(650);assert.equal(t.viewport.scrollTop,30);
 });
