@@ -84,7 +84,7 @@
   const from=viewport.scrollTop,to=positions.reduce((nearest,value)=>Math.abs(value-from)<Math.abs(nearest-from)?value:nearest);
   armed=false;if(Math.abs(to-from)<3)return;
   // Brake hard: a short ease-out that starts at full speed and locks in.
-  const began=performance.now(),run=Math.min(260,Math.max(140,Math.abs(to-from)*.5));
+  const began=performance.now(),run=Math.min(220,Math.max(120,Math.abs(to-from)*.45));
   root.classList.add('collection-settling');
   function step(now){
    if(!allowed()){stop();return;}
@@ -104,7 +104,7 @@
    if(!armed||touches||mouseDown)return;
    const moved=Math.abs(viewport.scrollTop-watchTop);watchTop=viewport.scrollTop;
    watchSlow=moved<=8?watchSlow+1:0;
-   if((watchSlow>=2&&now-watchStart>=90)||now-watchStart>=320){settle(true);return;}
+   if((watchSlow>=2&&now-watchStart>=50)||now-watchStart>=180){settle(true);return;}
    watchFrame=requestAnimationFrame(sample);
   };
   watchFrame=requestAnimationFrame(sample);
