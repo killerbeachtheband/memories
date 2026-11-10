@@ -321,12 +321,21 @@ function positionSwipeHint(){
  detailDialog.style.setProperty('--hint-w',`${rect.width}px`);
  detailDialog.style.setProperty('--hint-t',`${rect.bottom+10}px`);
 }
+// Stepping lights the arrow on the side moved toward, briefly, in orange.
+let glowTimer=0;
+function glowSwipeHint(dir){
+ detailDialog.classList.remove('glow-l','glow-r');
+ void detailDialog.offsetWidth;
+ detailDialog.classList.add(dir>0?'glow-r':'glow-l');
+ clearTimeout(glowTimer);glowTimer=setTimeout(()=>detailDialog.classList.remove('glow-l','glow-r'),520);
+}
 let detailStepping=false;
 function stepDetail(dir){
  if(!detailDialog.open||!currentDetailId||detailStepping)return;
  const list=detailNavList(),index=list.findIndex(e=>e.id===currentDetailId);
  if(index<0)return;
  const next=list[index+dir];if(!next)return;
+ glowSwipeHint(dir);
  const content=document.querySelector('#detail-content');
  const swap=()=>{
   renderDetail(next);detailDialog.scrollTop=0;requestAnimationFrame(positionSwipeHint);
@@ -407,6 +416,19 @@ if('IntersectionObserver' in window){
  document.querySelector('#collection-viewport')?.addEventListener('scroll',queueAutoMore,{passive:true});
  document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('close',queueAutoMore));
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)queueAutoMore();});
+}
+// A small back-to-top button appears once the end of the collection is
+// reached with everything shown.
+const topButton=document.querySelector('#collection-top');
+if(topButton){
+ const vp=document.querySelector('#collection-viewport');
+ const syncTopButton=()=>topButton.classList.toggle('show',vp.scrollTop>=vp.scrollHeight-vp.clientHeight-2&&document.querySelector('#load-more').hidden);
+ vp.addEventListener('scroll',syncTopButton,{passive:true});
+ new MutationObserver(syncTopButton).observe(document.querySelector('#load-more'),{attributes:true,attributeFilter:['hidden']});
+ topButton.addEventListener('click',()=>{
+  if(document.querySelector('.collection-windowed'))vp.scrollTo({top:0,behavior:'smooth'});
+  else document.querySelector('#collection').scrollIntoView({behavior:'smooth'});
+ });
 }
 document.querySelectorAll('[data-snapshot-date]').forEach(item=>item.textContent=ARCHIVE.snapshotDate);
 if(document.querySelector('#archive-total'))document.querySelector('#archive-total').textContent=`${pad(entries.length)} OBJECTS / 02 COLLECTIONS`;
