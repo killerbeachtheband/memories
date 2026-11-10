@@ -68,7 +68,7 @@ button:disabled{cursor:default;opacity:.5;scale:1}
 .collection-windowed .collection-viewport{scroll-snap-type:y mandatory;scroll-padding-top:16px}
 .collection-windowed .collection-grid .object-card{scroll-snap-align:start;translate:none!important}
 @media (prefers-reduced-motion:reduce){.collection-windowed .collection-viewport{scroll-snap-type:none}}
-.detail-swipe-hint{position:fixed;left:50%;transform:translateX(-50%);z-index:5;color:var(--ink);opacity:0;pointer-events:none;animation:detail-hint-in .3s ease .3s both}
+.detail-swipe-hint{position:fixed;z-index:5;display:flex;justify-content:space-between;color:var(--ink);opacity:0;pointer-events:none;animation:detail-hint-in .3s ease .3s both}
 @keyframes detail-hint-in{from{opacity:0}to{opacity:.85}}
 dialog[open]{animation:panel-open .22s cubic-bezier(.2,.75,.2,1) both}
 dialog[open]::backdrop{animation:panel-backdrop .18s ease both}
