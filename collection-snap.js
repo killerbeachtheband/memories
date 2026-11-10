@@ -43,7 +43,7 @@
   // On phones a resting page must clear the docked nav entirely — titles
   // included, not just artwork — and leave a peek of the next row visible
   // above the pill so the collection reads as continuing.
-  const peek=phone.matches?34:0,pageReserve=phone.matches?navReserve-8+peek:0;
+  const peek=phone.matches?66:0,pageReserve=phone.matches?navReserve-8+peek:0;
   const rows=wide.matches?1:phone.matches?3:2,rowHeight=Math.max(48,(viewport.clientHeight-pageReserve-32-20*(rows-1))/rows);
   setLayout(viewport,'--collection-row-height',rowHeight);
   const precedingRows=(rows-1)*(rowHeight+20),motionAllowance=phone.matches?16:24;
