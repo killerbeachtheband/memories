@@ -310,17 +310,16 @@ function detailNavList(){
  }
  return list;
 }
-// The swipe hint spans the popup's width just below it, over the backdrop:
-// one thin arrow under each end of the popup. A fixed element inside a modal
-// dialog may be contained by the dialog rather than the viewport, so probe
-// the containing block's origin and compensate.
+// The swipe arrows live on the dialog's backdrop layer itself (drawn as its
+// background), just below the popup: one thin arrow under each end. Elements
+// inside the scrolling dialog get clipped at its frame on some browsers, so
+// the arrows cannot be a child of the dialog; CSS vars place them instead.
 function positionSwipeHint(){
  if(!detailDialog.open)return;
- const hint=detailDialog.querySelector('.detail-swipe-hint');if(!hint)return;
  const rect=detailDialog.getBoundingClientRect();
- hint.style.left='0px';hint.style.top='0px';
- const probe=hint.getBoundingClientRect();
- hint.style.left=`${rect.left-probe.left}px`;hint.style.width=`${rect.width}px`;hint.style.top=`${rect.bottom+10-probe.top}px`;
+ detailDialog.style.setProperty('--hint-l',`${rect.left}px`);
+ detailDialog.style.setProperty('--hint-w',`${rect.width}px`);
+ detailDialog.style.setProperty('--hint-t',`${rect.bottom+10}px`);
 }
 let detailStepping=false;
 function stepDetail(dir){
@@ -386,7 +385,7 @@ document.querySelectorAll('dialog').forEach(dialog=>{
  dialog.addEventListener('click',event=>{if(backdropStart&&outside(event))closeArchiveDialog(dialog);backdropStart=false;});
  dialog.addEventListener('cancel',event=>{if(floatingEdition){event.preventDefault();closeArchiveDialog(dialog);}});
  dialog.addEventListener('close',()=>{if(typeof detailArtworkTransition!=='undefined')detailArtworkTransition.cancel(dialog);if(!document.querySelector('dialog[open]'))document.body.style.overflow='';});
- new MutationObserver(()=>{if(dialog.open)document.body.style.overflow='hidden';if(dialog===detailDialog&&dialog.open){requestAnimationFrame(positionSwipeHint);setTimeout(positionSwipeHint,500);}}).observe(dialog,{attributes:true,attributeFilter:['open']});
+ new MutationObserver(()=>{if(dialog.open)document.body.style.overflow='hidden';if(dialog===detailDialog){if(dialog.open)setTimeout(positionSwipeHint,480);else detailDialog.style.setProperty('--hint-t','-40px');}}).observe(dialog,{attributes:true,attributeFilter:['open']});
 });
 document.addEventListener('keydown',event=>{if(event.key==='/'&&!document.querySelector('dialog[open]')&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)){event.preventDefault();search.focus();search.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}});
 document.addEventListener('error',event=>{const img=event.target;if(img.tagName!=='IMG'||!img.closest('.cover-photo'))return;const card=img.closest('.cover-photo');card.classList.add('image-unavailable','cover-typographic');card.classList.remove('cover-photo');img.remove();const label=document.createElement('span');label.className='real-cover-title';label.textContent=img.alt.replace(/ — cover artwork$/,'');card.append(label);},true);
