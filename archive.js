@@ -327,7 +327,7 @@ function glowSwipeHint(dir){
  detailDialog.classList.remove('glow-l','glow-r');
  void detailDialog.offsetWidth;
  detailDialog.classList.add(dir>0?'glow-r':'glow-l');
- clearTimeout(glowTimer);glowTimer=setTimeout(()=>detailDialog.classList.remove('glow-l','glow-r'),580);
+ clearTimeout(glowTimer);glowTimer=setTimeout(()=>detailDialog.classList.remove('glow-l','glow-r'),360);
 }
 let detailStepping=false;
 function stepDetail(dir){
