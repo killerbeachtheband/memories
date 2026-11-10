@@ -297,7 +297,7 @@ html.section-sliding,html.collection-settling{scroll-behavior:auto!important}
  .collection{padding:16px 16px 92px}
  .collection-heading{padding-bottom:clamp(12px,calc(28svh - 175px),64px)}
  .collection-heading h2{font-size:18px}
- .collection-grid:not(.index-mode){--collection-cover-height:clamp(96px,17svh,156px);--collection-safe-bottom:env(safe-area-inset-bottom,0px);gap:20px 24px;padding:8px 0 var(--collection-tail-space,24px)}
+ .collection-grid:not(.index-mode){--collection-cover-height:clamp(120px,22svh,210px);--collection-safe-bottom:env(safe-area-inset-bottom,0px);gap:20px 24px;padding:8px 0 var(--collection-tail-space,24px)}
  .collection-grid:not(.index-mode) .object-card:nth-child(n){padding-top:0}
  .collection-grid:not(.index-mode) .object-card:nth-child(even){padding-top:12px}
  .collection-grid:not(.index-mode) .object-index{font-size:10px;line-height:1.4;margin-bottom:7px}
@@ -311,7 +311,7 @@ html.section-sliding,html.collection-settling{scroll-behavior:auto!important}
 /* A native scrolling window: artworks leave through its edges, never by hiding cards. */
 .collection-viewport{display:contents}
 @media(max-width:540px){
- .collection-windowed .collection{height:var(--collection-page-height,100svh);padding:16px 16px 80px;display:flex;flex-direction:column;overflow:clip}
+ .collection-windowed .collection{height:var(--collection-page-height,100svh);padding:16px 16px 0;display:flex;flex-direction:column;overflow:clip}
  .collection-windowed .collection-heading{flex:none;padding-bottom:20px}
  .collection-windowed .collection-viewport{display:block;position:relative;min-height:0;flex:1;margin-inline:-16px;padding-inline:16px;overflow:auto;overflow-x:hidden;overflow-anchor:none;scrollbar-width:none;-webkit-overflow-scrolling:touch}
  .collection-windowed .collection-viewport::-webkit-scrollbar{display:none}
@@ -395,6 +395,7 @@ html.section-sliding,html.collection-settling{scroll-behavior:auto!important}
 .category-filters .filter{background:transparent;border:1.5px solid var(--ink)}
 .category-filters .filter.active{background:var(--ink)}
 .sort-order-row{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:var(--white);border-radius:9999px;padding:10px 14px;font-size:12px;line-height:1;margin-left:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.menu-dialog .sort-order-row{margin:16px 0 4px}
 .sort-order-row [data-sort]{opacity:.55}
 .sort-order-row [data-sort].active{opacity:1}
 .sort-order-row .sort-sep{opacity:.55}
