@@ -132,7 +132,7 @@ function archiveDOM(entryData){
  for(const value of ['shuffle','newest']){
   const button=add(sort,'',{dataset:{sort:value}});button.tagName='SPAN';
  }
- add(document,'',{className:'filters'});
+ add(document,'category-filters',{className:'filters'});
  const ratings=add(document,'rating-filters');
  add(ratings,'goat-help');add(ratings,'rating-summary');add(ratings,'rating-clear');
  add(ratings,'',{dataset:{rating:'goat'}});add(ratings,'',{dataset:{rating:'unrated'}});
