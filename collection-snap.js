@@ -37,11 +37,15 @@
   }
   // Four columns on a wide screen; three staggered rows on phones, two on other small screens.
   setLayout(root,'--collection-page-height',Math.min(innerHeight,window.visualViewport?.height||innerHeight));
-  const rows=wide.matches?1:phone.matches?3:2,rowHeight=Math.max(48,(viewport.clientHeight-32-20*(rows-1))/rows);
-  setLayout(viewport,'--collection-row-height',rowHeight);
   // The scroll window reaches the screen edge; resting artwork still clears the floating nav.
   const nav=document.querySelector('.central-nav'),safeBottom=parseFloat(getComputedStyle(grid).getPropertyValue('--collection-safe-bottom'))||0;
   const navReserve=(phone.matches?38:42)+(nav?.offsetHeight||60)/2+safeBottom+8;
+  // On phones a resting page must clear the docked nav entirely — titles
+  // included, not just artwork — and leave a peek of the next row visible
+  // above the pill so the collection reads as continuing.
+  const peek=phone.matches?34:0,pageReserve=phone.matches?navReserve-8+peek:0;
+  const rows=wide.matches?1:phone.matches?3:2,rowHeight=Math.max(48,(viewport.clientHeight-pageReserve-32-20*(rows-1))/rows);
+  setLayout(viewport,'--collection-row-height',rowHeight);
   const precedingRows=(rows-1)*(rowHeight+20),motionAllowance=phone.matches?16:24;
   setLayout(viewport,'--collection-cover-limit',Math.max(48,viewport.clientHeight-precedingRows-16-navReserve-motionAllowance));
   const pageStart=collection?layoutTop(collection):null;
