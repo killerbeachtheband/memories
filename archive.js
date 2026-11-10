@@ -318,7 +318,7 @@ function positionSwipeHint(){
  if(!detailDialog.open)return;
  const rect=detailDialog.getBoundingClientRect();
  detailDialog.style.setProperty('--hint-l',`${rect.left}px`);
- detailDialog.style.setProperty('--hint-w',`${rect.width}px`);
+ detailDialog.style.setProperty('--hint-r',`${innerWidth-rect.right}px`);
  detailDialog.style.setProperty('--hint-t',`${rect.bottom+10}px`);
 }
 // Stepping lights the arrow on the side moved toward, briefly, in orange.
@@ -327,7 +327,7 @@ function glowSwipeHint(dir){
  detailDialog.classList.remove('glow-l','glow-r');
  void detailDialog.offsetWidth;
  detailDialog.classList.add(dir>0?'glow-r':'glow-l');
- clearTimeout(glowTimer);glowTimer=setTimeout(()=>detailDialog.classList.remove('glow-l','glow-r'),520);
+ clearTimeout(glowTimer);glowTimer=setTimeout(()=>detailDialog.classList.remove('glow-l','glow-r'),580);
 }
 let detailStepping=false;
 function stepDetail(dir){
