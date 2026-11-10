@@ -39,7 +39,15 @@
   setLayout(root,'--collection-page-height',Math.min(innerHeight,window.visualViewport?.height||innerHeight));
   // The scroll window reaches the screen edge; resting artwork still clears the floating nav.
   const nav=document.querySelector('.central-nav'),safeBottom=parseFloat(getComputedStyle(grid).getPropertyValue('--collection-safe-bottom'))||0;
-  const navReserve=(phone.matches?38:42)+(nav?.offsetHeight||60)/2+safeBottom+8;
+  let navReserve=(phone.matches?38:42)+(nav?.offsetHeight||60)/2+safeBottom+8;
+  // When the nav is docked over the collection, measure where it actually
+  // sits over the scroll window instead of estimating it: on phones the
+  // layout height and the height the fixed nav docks against (dvh) can
+  // differ by the browser chrome, which silently eats the reserve.
+  if(nav?.classList?.contains('nav-docked')&&typeof nav.getBoundingClientRect==='function'&&typeof viewport.getBoundingClientRect==='function'){
+   const overlap=viewport.getBoundingClientRect().bottom-nav.getBoundingClientRect().top;
+   if(overlap>40&&overlap<viewport.clientHeight/2)navReserve=overlap;
+  }
   // On phones a resting page must clear the docked nav entirely — titles
   // included, not just artwork — and leave a peek of the next row visible
   // above the pill so the collection reads as continuing.
@@ -70,6 +78,13 @@
  phone.addEventListener('change',queueLayout);wide.addEventListener('change',queueLayout);reduced.addEventListener('change',queueLayout);
  new ResizeObserver(queueLayout).observe(viewport);
  new MutationObserver(queueLayout).observe(grid,{childList:true,attributes:true,attributeFilter:['class']});
+ const navElement=document.querySelector('.central-nav');
+ if(navElement){
+  // Docking animates the nav's top, so a layout pass at the toggle moment
+  // would measure it mid-flight; re-run once it lands as well.
+  new MutationObserver(()=>{queueLayout();setTimeout(queueLayout,500);}).observe(navElement,{attributes:true,attributeFilter:['class']});
+  navElement.addEventListener('transitionend',event=>{if(event.propertyName==='top')queueLayout();});
+ }
  document.fonts?.ready.then(queueLayout);
  syncLayout();
 })();
