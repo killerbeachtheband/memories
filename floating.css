@@ -65,12 +65,11 @@ button:disabled{cursor:default;opacity:.5;scale:1}
 #collection-title:focus{outline:none}
 #menu-dialog{max-height:calc(100dvh - 32px);overscroll-behavior:contain}
 #detail-dialog,#about-dialog{overscroll-behavior:contain;scroll-behavior:auto}
-.detail-navs{position:sticky;top:50%;height:0;z-index:4}
-.detail-nav{position:absolute;top:0;transform:translateY(-50%);width:44px;height:56px;padding:0;background:none;border:0;color:var(--ink);font-family:var(--font);font-size:32px;line-height:1;opacity:.55;cursor:pointer}
-.detail-nav[data-nav="-1"]{left:-12px}
-.detail-nav[data-nav="1"]{right:-12px}
-.detail-nav:active{opacity:1}
-.detail-nav[hidden]{display:none}
+.collection-windowed .collection-viewport{scroll-snap-type:y mandatory;scroll-padding-top:16px}
+.collection-windowed .collection-grid .object-card{scroll-snap-align:start;translate:none!important}
+@media (prefers-reduced-motion:reduce){.collection-windowed .collection-viewport{scroll-snap-type:none}}
+.detail-swipe-hint{position:fixed;left:50%;transform:translateX(-50%);z-index:5;color:var(--ink);opacity:0;pointer-events:none;animation:detail-hint-in .3s ease .3s both}
+@keyframes detail-hint-in{from{opacity:0}to{opacity:.85}}
 dialog[open]{animation:panel-open .22s cubic-bezier(.2,.75,.2,1) both}
 dialog[open]::backdrop{animation:panel-backdrop .18s ease both}
 dialog[open].is-closing{animation:panel-close .16s ease both;pointer-events:none}
