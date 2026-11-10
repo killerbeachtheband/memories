@@ -349,6 +349,15 @@ function stepDetail(dir){
  }else swap();
 }
 if(detailDialog){
+ // The swipe arrows are drawn on the backdrop just below the popup; taps in
+ // their zones act as prev/next buttons.
+ detailDialog.addEventListener('click',event=>{
+  if(event.target!==detailDialog)return;
+  const rect=detailDialog.getBoundingClientRect();
+  if(event.clientY<rect.bottom||event.clientY>rect.bottom+44)return;
+  if(event.clientX>=rect.left&&event.clientX<=rect.left+72)stepDetail(-1);
+  else if(event.clientX>=rect.right-72&&event.clientX<=rect.right)stepDetail(1);
+ });
  let touchX=null,touchY=null;
  detailDialog.addEventListener('touchstart',event=>{
   if(event.touches.length!==1){touchX=null;return;}
