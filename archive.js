@@ -288,8 +288,6 @@ function renderDetail(e){
  const checkedOn=reviewFacts.filter(([k])=>k==='SCORES CHECKED ON').map(([,v])=>v);
  facts.push(...reviewFacts.filter(([k])=>k!=='SCORES CHECKED ON'));
  const scoreContext=checkedOn.length?`<span class="score-context">Checked ${checkedOn.map(v=>escapeHTML(formatDate(v))).join(', ')}. Scores may change.</span>`:'';
- const navList=detailNavList(),navIndex=navList.findIndex(item=>item.id===e.id);
- detailDialog.querySelectorAll('[data-nav]').forEach(b=>{b.hidden=b.dataset.nav==='-1'?navIndex<=0:navIndex<0||navIndex>=navList.length-1;});
  document.querySelector('#detail-content').innerHTML=`<div class="detail-layout"><div class="detail-visual">${coverMarkup(e,true)}</div><div class="detail-body"><h2 id="detail-title" class="${isJapanese(e.title)?'jp':''}"${jaLang(e.title)}>${escapeHTML(e.title)}</h2>${e.originalTitle?.trim() && e.originalTitle.trim()!==e.title?`<p class="original-title"${jaLang(e.originalTitle)}>${escapeHTML(e.originalTitle)}</p>`:''}<p class="detail-creator"${jaLang(e.creator)}>${escapeHTML(e.creator||'Creator unrecorded')}</p><div class="detail-tags">${e.tags.map(t=>`<span>${escapeHTML(t)}</span>`).join('')}</div><dl class="detail-facts">${facts.map(([k,v])=>`<div><dt>${escapeHTML(k)}</dt><dd>${escapeHTML(v)}</dd></div>`).join('')}</dl><div class="source-links">${links.map(([k,u])=>`<a href="${escapeHTML(safeURL(u))}" target="_blank" rel="noopener noreferrer">${k==='リンク'?'Listen online':escapeHTML(k)} ↗</a>`).join('')}</div></div></div>${`<section class="member-reviews"><h3 class="member-reviews-heading">MEMBER REVIEWS</h3>${reviews.map(memberReviewMarkup).join('')}</section>`}<p class="detail-disclaimer"><a href="${escapeHTML(safeURL(e.url))}" target="_blank" rel="noopener noreferrer">Open the log sheet</a>${scoreContext}</p>`;
 }
 function showEntry(id,button=null){
@@ -312,6 +310,13 @@ function detailNavList(){
  }
  return list;
 }
+// The swipe hint sits just below the popup, over the backdrop.
+function positionSwipeHint(){
+ if(!detailDialog.open)return;
+ const hint=detailDialog.querySelector('.detail-swipe-hint');if(!hint)return;
+ const rect=detailDialog.getBoundingClientRect();
+ hint.style.top=`${Math.max(0,Math.min(rect.bottom+12,innerHeight-36))}px`;
+}
 let detailStepping=false;
 function stepDetail(dir){
  if(!detailDialog.open||!currentDetailId||detailStepping)return;
@@ -320,7 +325,7 @@ function stepDetail(dir){
  const next=list[index+dir];if(!next)return;
  const content=document.querySelector('#detail-content');
  const swap=()=>{
-  renderDetail(next);detailDialog.scrollTop=0;
+  renderDetail(next);detailDialog.scrollTop=0;requestAnimationFrame(positionSwipeHint);
   content.animate?.([{transform:`translateX(${dir*36}px)`,opacity:0},{transform:'translateX(0px)',opacity:1}],{duration:210,easing:'cubic-bezier(.22,.9,.3,1)'});
  };
  if(content.animate){
@@ -345,10 +350,7 @@ if(detailDialog){
   if(event.key==='ArrowRight')stepDetail(1);
   else if(event.key==='ArrowLeft')stepDetail(-1);
  });
- detailDialog.addEventListener('click',event=>{
-  const button=event.target.closest('[data-nav]');
-  if(button)stepDetail(Number(button.dataset.nav));
- });
+ addEventListener('resize',()=>positionSwipeHint());
 }
 function renderFavorites(){
  if(!document.querySelector('.favorite-grid'))return;
@@ -379,7 +381,7 @@ document.querySelectorAll('dialog').forEach(dialog=>{
  dialog.addEventListener('click',event=>{if(backdropStart&&outside(event))closeArchiveDialog(dialog);backdropStart=false;});
  dialog.addEventListener('cancel',event=>{if(floatingEdition){event.preventDefault();closeArchiveDialog(dialog);}});
  dialog.addEventListener('close',()=>{if(typeof detailArtworkTransition!=='undefined')detailArtworkTransition.cancel(dialog);if(!document.querySelector('dialog[open]'))document.body.style.overflow='';});
- new MutationObserver(()=>{if(dialog.open)document.body.style.overflow='hidden';}).observe(dialog,{attributes:true,attributeFilter:['open']});
+ new MutationObserver(()=>{if(dialog.open)document.body.style.overflow='hidden';if(dialog===detailDialog&&dialog.open)requestAnimationFrame(positionSwipeHint);}).observe(dialog,{attributes:true,attributeFilter:['open']});
 });
 document.addEventListener('keydown',event=>{if(event.key==='/'&&!document.querySelector('dialog[open]')&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)){event.preventDefault();search.focus();search.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}});
 document.addEventListener('error',event=>{const img=event.target;if(img.tagName!=='IMG'||!img.closest('.cover-photo'))return;const card=img.closest('.cover-photo');card.classList.add('image-unavailable','cover-typographic');card.classList.remove('cover-photo');img.remove();const label=document.createElement('span');label.className='real-cover-title';label.textContent=img.alt.replace(/ — cover artwork$/,'');card.append(label);},true);
