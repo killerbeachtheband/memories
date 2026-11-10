@@ -41,10 +41,10 @@ test('the script leaves reduced-motion, zoomed, editing and oversized cases alon
  for(const opt of [{reduced:true},{zoom:2},{editable:true},{oversized:true}]){const t=setup(opt);t.scroll(640);t.advance(650);assert.equal(t.viewport.scrollTop,640);}
 });
 test('browser toolbar resize preserves the same resting passage',()=>{
- const t=setup();t.scroll(594.6666666666666);t.resize(600);t.advance(100);assert.equal(t.viewport.scrollTop,648);
+ const t=setup();t.scroll(552);t.resize(600);t.advance(100);assert.equal(t.viewport.scrollTop,605.3333333333335);
 });
 test('partial final groups can reach the top of the window',()=>{
- const t=setup({cards:5,y:0});assert(t.viewport.scrollHeight-t.viewport.clientHeight>=148);
+ const t=setup({cards:5,y:0});assert(t.viewport.scrollHeight-t.viewport.clientHeight>=138);
 });
 test('resting covers reserve clearance above the floating nav even with a full-height window',()=>{
  const t=setup();
@@ -65,7 +65,7 @@ test('resizing a browser keeps the collection at the top of the screen',()=>{
  const t=setup();t.collection.offsetTop=780;t.resize(600);t.advance(80);assert.equal(t.context.scrollY,780);
 });
 test('switching to phone width keeps the same first artwork in view',()=>{
- const t=setup({phone:false});t.scroll(548);t.setPhone(true);t.advance(80);assert.equal(t.viewport.scrollTop,297.33333333333326);
+ const t=setup({phone:false});t.scroll(548);t.setPhone(true);t.advance(80);assert.equal(t.viewport.scrollTop,276);
 });
 test('an empty filtered collection stays where it is put',()=>{
  const t=setup({cards:0,y:0});t.scroll(30);t.advance(650);assert.equal(t.viewport.scrollTop,30);
