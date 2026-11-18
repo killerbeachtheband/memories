@@ -351,3 +351,12 @@ test('menu result count and Clear filters share the rated default',()=>{
  assertSnapshotList(document,rated);
  assert.equal(document.querySelector('#menu-reset').hidden,true);
 });
+
+test('dates render in English month format',()=>{
+ const local=vm.createContext({});
+ const formatDate=vm.runInContext(source.match(/const MONTH_NAMES=.+;/)[0]+'\n'+source.match(/const formatDate=.+;/)[0]+'\nformatDate;',local);
+ assert.equal(formatDate('2008-10-06'),'Oct 6, 2008');
+ assert.equal(formatDate('2026-11-18'),'Nov 18, 2026');
+ assert.equal(formatDate(''),'UNDATED');
+ assert.equal(formatDate(null),'UNDATED');
+});
