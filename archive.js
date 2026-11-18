@@ -61,7 +61,8 @@ const escapeHTML=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const isJapanese=v=>/[\u3040-\u30ff\u3400-\u9fff]/.test(v);
 const jaLang=v=>v&&isJapanese(v)?' lang="ja"':'';
 const pad=v=>String(v).padStart(2,'0');
-const formatDate=v=>v?v.slice(0,10).replaceAll('-','.'):'UNDATED';
+const MONTH_NAMES=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const formatDate=v=>{if(!v)return 'UNDATED';const p=v.slice(0,10).split('-');if(p.length!==3)return v.slice(0,10);const month=MONTH_NAMES[Number(p[1])-1];return month?`${month} ${Number(p[2])}, ${p[0]}`:v.slice(0,10);};
 const categoryNames={'all':'All media','映画':'Cinema','音楽':'Music','アート':'Art','舞台・ライブ':'Live','建築':'Architecture','ゲーム':'Games','本':'Books','その他':'Other'};
 const ratingText=e=>typeof e.rating==='number'?`${e.rating} / 10`:'Unrated';
 const safeURL=v=>{try{const u=new URL(v);return ['https:','http:'].includes(u.protocol)?u.href:'';}catch{return '';}};
@@ -185,7 +186,7 @@ function updateFilterButtons(){
 function cardMarkup(e){
  const date=collectionDate(e);
  if(document.documentElement.dataset.edition==='floating')return `<article class="object-card"><button class="object-open" data-entry="${e.id}" aria-label="Read the note: ${escapeHTML(e.title)}"><span class="object-index">${pad(entries.indexOf(e)+1)}</span>${coverMarkup(e)}<span class="object-caption"><span class="object-title"${isJapanese(e.title)?' lang="ja"':''}>${escapeHTML(e.title)}</span><span class="object-label">${e.label}${e.member?` · ${escapeHTML(e.member)}`:''}</span><span class="object-rating">${escapeHTML(ratingText(e))}</span></span><span class="hover-label" aria-hidden="true">Open ↗</span></button></article>`;
- return `<article class="object-card"><button class="object-open" data-entry="${e.id}" aria-label="Read the note: ${escapeHTML(e.title)}">${coverMarkup(e)}<div class="card-content"><div class="object-meta"><span>${e.label}</span><span>${date?`${e.source==='music'?'RELEASED':'EXPERIENCED'} ${formatDate(date)}`:'UNDATED'}</span></div><h3 class="object-title${isJapanese(e.title)?' jp':''}"${isJapanese(e.title)?' lang="ja"':''}>${escapeHTML(e.title)}</h3><p class="object-creator">${escapeHTML(e.creator||'Creator unrecorded')}</p><p class="card-excerpt${e.note?'':' is-empty'}"${isJapanese(e.note)?' lang="ja"':''}>${escapeHTML(e.note||'No note.')}</p><div class="object-bottom"><span class="card-rating${e.hallOfFame?' is-favorite':''}">${e.hallOfFame?'◇ ':''}${escapeHTML(ratingText(e))}${e.hallOfFame&&e.source==='music'?' · GOAT':''}</span><span class="card-read">Read note <span class="card-arrow" aria-hidden="true">↗</span></span></div></div></button></article>`;
+ return `<article class="object-card"><button class="object-open" data-entry="${e.id}" aria-label="Read the note: ${escapeHTML(e.title)}">${coverMarkup(e)}<div class="card-content"><div class="object-meta"><span>${e.label}</span><span>${date?`${(e.dateLabel||'').replace(/ ON$/,'')||(e.source==='music'?'RELEASED':'EXPERIENCED')} ${formatDate(date)}`:'UNDATED'}</span></div><h3 class="object-title${isJapanese(e.title)?' jp':''}"${isJapanese(e.title)?' lang="ja"':''}>${escapeHTML(e.title)}</h3><p class="object-creator">${escapeHTML(e.creator||'Creator unrecorded')}</p><p class="card-excerpt${e.note?'':' is-empty'}"${isJapanese(e.note)?' lang="ja"':''}>${escapeHTML(e.note||'No note.')}</p><div class="object-bottom"><span class="card-rating${e.hallOfFame?' is-favorite':''}">${e.hallOfFame?'◇ ':''}${escapeHTML(ratingText(e))}${e.hallOfFame&&e.source==='music'?' · GOAT':''}</span><span class="card-read">Read note <span class="card-arrow" aria-hidden="true">↗</span></span></div></div></button></article>`;
 }
 function render(append=false,focusAdded=false){
  if(!append)document.querySelector('#load-status').textContent='';
@@ -276,7 +277,7 @@ function sameWorkReviews(e){
 }
 function memberReviewMarkup(r){
  const {body}=detailSources(r);
- return `<article class="member-review"><header class="member-review-head"><span class="member-review-name">${escapeHTML(r.member||'Unknown member')}</span><span class="member-review-rating">${escapeHTML(ratingText(r))}${isFormative(r)?'<span class="formative-badge">Formative</span>':''}</span></header>${typeof r.rating==='number'?`<div class="rating-row">${ratingBarMarkup(r)}</div>`:''}<p class="detail-note${r.note?'':' note-empty'}"${jaLang(r.note)}>${r.note?escapeHTML(r.note):'No note has been recorded yet.'}</p>${body?`<div class="member-review-body"${jaLang(body)}>${renderMarkdown(body)}</div>`:''}</article>`;
+ return `<article class="member-review"><header class="member-review-head"><span class="member-review-name">${escapeHTML(r.member||'Unknown member')}</span><span class="member-review-rating">${escapeHTML(ratingText(r))}${isFormative(r)?'<span class="formative-badge">Formative</span>':''}</span></header>${typeof r.rating==='number'?`<div class="rating-row">${ratingBarMarkup(r)}</div>`:''}<p class="detail-note${r.note?'':' note-empty'}"${jaLang(r.note)}>${r.note?escapeHTML(r.note):'No note has been recorded yet.'}</p>${r.registeredDate?`<p class="detail-registered">Registered ${escapeHTML(formatDate(r.registeredDate))}</p>`:''}${body?`<div class="member-review-body"${jaLang(body)}>${renderMarkdown(body)}</div>`:''}</article>`;
 }
 let currentDetailId=null;
 function renderDetail(e){

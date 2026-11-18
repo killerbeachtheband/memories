@@ -419,3 +419,5 @@ html.section-sliding,html.collection-settling{scroll-behavior:auto!important}
 .rating-fill{display:block;height:100%;background:#8A8378}
 .rating-grid{position:absolute;left:0;right:0;top:-1px;height:4px;background:repeating-linear-gradient(90deg,transparent 0,transparent calc(10% - 1px),#fff calc(10% - 1px),#fff 10%);pointer-events:none}
 .detail-facts .rating-bar{margin-top:8px;max-width:180px}
+
+.detail-registered{margin-top:8px;color:#737373;font-size:12px}
